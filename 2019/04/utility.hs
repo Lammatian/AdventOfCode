@@ -11,3 +11,6 @@ splitLines = splitOn '\n'
 
 readInt :: String -> Int
 readInt s = read s::Int
+
+readInteger :: String -> Integer
+readInteger s = read s::Integer
