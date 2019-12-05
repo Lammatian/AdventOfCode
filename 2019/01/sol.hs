@@ -1,9 +1,10 @@
 module Main where
 
+import System.Environment
 import System.IO
 import Debug.Trace
-import Utility as U
 
+import Utility as U
 
 sol1 :: String -> Int
 sol1 s = sum $ map strToFuel (U.splitLines s)
@@ -31,9 +32,8 @@ getFullFuel mass = fuel + fuelFuel fuel
 
 main :: IO ()
 main = do
-        handle <- openFile "input0.txt" ReadMode
-        contents <- hGetContents handle
-        -- print $ getFullFuel 1969
-        -- print $ getFullFuel 100756
+        [filename] <- getArgs
+        handle     <- openFile filename ReadMode
+        contents   <- hGetContents handle
         print $ sol1 contents
         print $ sol2 contents

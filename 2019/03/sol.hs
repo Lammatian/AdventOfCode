@@ -1,8 +1,11 @@
+module Main where
+
 import System.Environment
 import System.IO
-import Utility as U
 import Debug.Trace
 import Data.Maybe
+
+import Utility as U
 
 data Point    = Point Int Int            deriving (Show)
 data Line     = Line Point Point         deriving (Show)
@@ -145,9 +148,8 @@ sol2 s = minimum $ mapMaybe (\x -> firstCrossingTime x (dlines!!1)) (head dlines
               dlines = map toDistLines lines
 
 main = do
-    [arg]        <- getArgs
-    let filename = "input" ++ arg ++ ".txt"
-    handle       <- openFile filename ReadMode
-    contents     <- hGetContents handle
+    [filename] <- getArgs
+    handle     <- openFile filename ReadMode
+    contents   <- hGetContents handle
     print $ sol1 contents
     print $ sol2 contents

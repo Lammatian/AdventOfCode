@@ -1,7 +1,11 @@
+module Main where
+
+import System.Environment
 import System.IO
 import Data.Sequence as Seq
 import Data.Maybe
 import Debug.Trace
+
 import Utility as U
 
 sol1 :: String -> Integer
@@ -47,7 +51,8 @@ sol2rec s a b
 
 main :: IO ()
 main = do
-        handle <- openFile "input0.txt" ReadMode
-        contents <- hGetContents handle
+        [filename] <- getArgs
+        handle     <- openFile filename ReadMode
+        contents   <- hGetContents handle
         print $ sol1 contents
         print $ sol2 contents
