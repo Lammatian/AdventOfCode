@@ -13,8 +13,7 @@ library
     hs-source-dirs: Common
     default-language: Haskell2010
     build-depends:
-        base >=4.12 && <4.13,
-        Cabal -any
+        base -any
 
 executable day1
     main-is: sol.hs
@@ -23,7 +22,7 @@ executable day1
         Utility
     default-language: Haskell2010
     build-depends:
-        base >=4.12 && <4.13
+        base -any
 
 executable day2
     main-is: sol.hs
@@ -32,8 +31,8 @@ executable day2
         Utility
     default-language: Haskell2010
     build-depends:
-        base >=4.12 && <4.13,
-        containers -any
+        base -any,
+        containers >= 0.5.8
 
 executable day3
     main-is: sol.hs
@@ -42,7 +41,7 @@ executable day3
         Utility
     default-language: Haskell2010
     build-depends:
-        base >=4.12 && <4.13
+        base -any
 
 executable day4
     main-is: sol.hs
@@ -51,7 +50,7 @@ executable day4
         Utility
     default-language: Haskell2010
     build-depends:
-        base >=4.12 && <4.13
+        base -any
 
 executable day5
     main-is: sol.hs
@@ -60,184 +59,5 @@ executable day5
         Utility
     default-language: Haskell2010
     build-depends:
-        base >=4.12 && <4.13
-
-executable day6
-    main-is: sol.hs
-    hs-source-dirs: 06 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day7
-    main-is: sol.hs
-    hs-source-dirs: 07 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day8
-    main-is: sol.hs
-    hs-source-dirs: 08 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day9
-    main-is: sol.hs
-    hs-source-dirs: 09 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day10
-    main-is: sol.hs
-    hs-source-dirs: 10 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day11
-    main-is: sol.hs
-    hs-source-dirs: 11 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day12
-    main-is: sol.hs
-    hs-source-dirs: 12 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day13
-    main-is: sol.hs
-    hs-source-dirs: 13 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day14
-    main-is: sol.hs
-    hs-source-dirs: 14 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day15
-    main-is: sol.hs
-    hs-source-dirs: 15 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day16
-    main-is: sol.hs
-    hs-source-dirs: 16 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day17
-    main-is: sol.hs
-    hs-source-dirs: 17 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day18
-    main-is: sol.hs
-    hs-source-dirs: 18 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day19
-    main-is: sol.hs
-    hs-source-dirs: 19 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day20
-    main-is: sol.hs
-    hs-source-dirs: 20 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day21
-    main-is: sol.hs
-    hs-source-dirs: 21 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day22
-    main-is: sol.hs
-    hs-source-dirs: 22 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day23
-    main-is: sol.hs
-    hs-source-dirs: 23 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day24
-    main-is: sol.hs
-    hs-source-dirs: 24 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
-
-executable day25
-    main-is: sol.hs
-    hs-source-dirs: 25 Common
-    other-modules:
-        Utility
-    default-language: Haskell2010
-    build-depends:
-        base >=4.12 && <4.13
+        base -any,
+        containers >= 0.5.8
