@@ -55,7 +55,7 @@ int sol2(std::vector<ll> nums) {
 
 int main() {
     std::ifstream f("input.txt");
-    std::vector<ll> nums = readlls(f);
+    std::vector<ll> nums = util::readlls(f);
 
     std::cout << sol1(nums) << std::endl;
     std::cout << sol2(nums) << std::endl;
