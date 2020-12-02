@@ -63,7 +63,6 @@ ll sol2(std::vector<std::string> lines) {
         std::string password = tokens[1].substr(1);
 
         if (satisfies_position_policy(password, p)) {
-            std::cout << password << ", " << tokens[0] << std::endl;
             result++;
         }
     }
