@@ -5,17 +5,11 @@
 #include "util.h"
 
 ll seat_to_number(std::string seat) {
-    ll result = 0;
-
-    for (int i = 0; i < seat.size(); ++i) {
-        char cur = seat[seat.size() - i - 1];
-
-        if (cur == 'R' || cur == 'B') {
-            result += 1 << i;
-        }
-    }
-
-    return result;
+    std::replace(seat.begin(), seat.end(), 'R', '1');
+    std::replace(seat.begin(), seat.end(), 'B', '1');
+    std::replace(seat.begin(), seat.end(), 'L', '0');
+    std::replace(seat.begin(), seat.end(), 'F', '0');
+    return std::strtoll(seat.c_str(), 0, 2);
 }
 
 ll sol1(std::vector<std::string> lines) {
