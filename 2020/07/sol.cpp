@@ -38,7 +38,7 @@ std::vector<rule> prep(std::vector<std::string> lines) {
         }
 
         // Remove . at end
-        containees_str = containees_str.substr(0, containees_str.size() - 1);
+        containees_str.pop_back();
 
         std::vector<std::string> containees_unparsed = util::tokenize(containees_str, DELIMS);
         std::vector<containee> containees;
