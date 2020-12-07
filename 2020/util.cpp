@@ -25,21 +25,6 @@ namespace util {
         return result;
     }
 
-    template <typename T>
-    std::map<T, ll> counts(std::vector<T> vals) {
-        std::map<T, ll> result;
-
-        for (auto& v: vals) {
-            if (result.find(v) != result.end()) {
-                result[v]++;
-            } else {
-                result[v] = 1;
-            }
-        }
-
-        return result;
-    }
-
     std::vector<std::string> tokenize(std::string s,
                                       std::vector<char> delims) {
         std::stringstream ss(s);

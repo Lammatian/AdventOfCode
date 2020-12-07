@@ -15,8 +15,20 @@ namespace util {
      * Count the number of occurrences of each element in a vector
      * Very limited version of Python's collections.Counter
      */
-    template <typename T>
-    std::map<T, ll> count(std::vector<T> vals);
+    template <typename T, typename A>
+    std::map<T, ll> count(const std::vector<T, A>& vals) {
+        std::map<T, ll> result;
+
+        for (auto& v: vals) {
+            if (result.find(v) != result.end()) {
+                result[v]++;
+            } else {
+                result[v] = 1;
+            }
+        }
+
+        return result;
+    }
 
     /*
      * Tokenize a string based on a series of delimiters.
