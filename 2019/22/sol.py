@@ -9,12 +9,6 @@ class Op(Enum):
     INCREMENT = 2
 
 
-class Command:
-    def __init__(self, op, value):
-        self.op = op
-        self.value = value
-
-
 def parse(cmd):
     if cmd[0] == 'c':
         return (Op.CUT, int(cmd.split()[-1]))
@@ -24,39 +18,8 @@ def parse(cmd):
         return (Op.INCREMENT, int(cmd.split()[-1]))
 
 
-def cut(arr, n):
-    r = range(n, n + len(arr))
-    arr = arr.take(r, mode='wrap')
-    return arr
-
-    
-def rev(arr):
-    arr = np.flip(arr)
-    return arr
-
-
-def increment(arr, n):
-    new_arr = np.zeros(len(arr), dtype=int)
-
-    for i in range(len(arr)):
-        new_arr[(n * i) % len(arr)] = arr[i]
-
-    new_arr
-    return new_arr
-
-
 def sol1(commands, size=10007, target=2019):
-    arr = np.arange(size)
-
-    for command, n in commands:
-        if command == Op.REVERSE:
-            arr = rev(arr)
-        elif command == Op.CUT:
-            arr = cut(arr, n)
-        else:
-            arr = increment(arr, n)
-
-    return list(arr).index(target)
+    return (commands[0][1] * target - commands[1][1]) % size
 
 
 def reduce_commands(commands, size):
