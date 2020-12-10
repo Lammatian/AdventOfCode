@@ -64,6 +64,25 @@ ll sol2(std::vector<ll> nums) {
     return result;
 }
 
+ll sol2_dp(const std::vector<ll>& nums) {
+    ll result = 1;
+    // Enhanced numbers - with 0 at the start and max(nums) + 3 at the end
+    std::vector<ll> enums;
+    enums.push_back(0);
+    enums.insert(enums.end(), nums.begin(), nums.end());
+    std::sort(enums.begin(), enums.end());
+    enums.push_back(enums.back() + 3);
+
+    std::map<ll, ll> cache;
+    cache[enums.back()] = 1;
+
+    for (auto it = enums.rbegin() + 1; it != enums.rend(); it++) {
+        cache[*it] = cache[*it + 1] + cache[*it + 2] + cache[*it + 3];
+    }
+
+    return cache[0];
+}
+
 int main(int argc, char** argv) {
     std::string filename = argc > 1 ? argv[1] : "input.txt";
     std::ifstream f(filename);
@@ -72,6 +91,7 @@ int main(int argc, char** argv) {
 
     std::cout << sol1(nums) << std::endl;
     std::cout << sol2(nums) << std::endl;
+    std::cout << sol2_dp(nums) << std::endl;
 
     return 0;
 }
