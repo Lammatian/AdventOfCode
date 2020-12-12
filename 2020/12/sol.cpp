@@ -6,10 +6,6 @@
 
 typedef std::vector<std::string> Commands;
 
-enum class Direction {
-    NORTH, EAST, SOUTH, WEST
-};
-
 std::map<char, std::pair<int, int>> dir2move = {
     {'N', {0, -1}},
     {'E', {1, 0}},
@@ -63,9 +59,50 @@ ll sol1(Commands commands) {
     return std::abs(f.x) + std::abs(f.y);
 }
 
-ll sol2(Commands commands) {
+class WaypointFerry {
+  public:
+    ll wx = 10, wy = -1;
+    ll x = 0, y = 0;
 
-    return 0;
+    WaypointFerry() {};
+
+    void execute(std::string command) {
+        int val = std::stoi(command.substr(1));
+
+        if (command[0] == 'F') {
+            x += wx * val;
+            y += wy * val;
+        }
+
+        if (command[0] == 'L') {
+            int rots = val / 90;
+
+            for (int i = 0; i < rots; ++i) {
+                std::swap(wx, wy);
+                wy = -wy;
+            }
+        } else if (command[0] == 'R') {
+            int rots = val / 90;
+
+            for (int i = 0; i < rots; ++i) {
+                std::swap(wx, wy);
+                wx = -wx;
+            }
+        } else {
+            wx += val * dir2move[command[0]].first;
+            wy += val * dir2move[command[0]].second;
+        }
+    }
+};
+
+ll sol2(Commands commands) {
+    WaypointFerry f;
+
+    for (auto& command: commands) {
+        f.execute(command);
+    }
+
+    return std::abs(f.x) + std::abs(f.y);
 }
 
 int main(int argc, char** argv) {
