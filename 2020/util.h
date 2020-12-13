@@ -11,10 +11,10 @@ namespace util {
 
     std::vector<ll> readlls(std::ifstream& f);
 
-    /*
+    /**
      * Count the number of occurrences of each element in a vector
      * Very limited version of Python's collections.Counter
-     */
+     **/
     template <typename T, typename A>
     std::map<T, ll> count(const std::vector<T, A>& vals) {
         std::map<T, ll> result;
@@ -30,12 +30,19 @@ namespace util {
         return result;
     }
 
-    /*
+    /**
      * Tokenize a string based on a series of delimiters.
      * Returns a vector of tokens, one per delimiter (+ one at end)
      * e.g tokenize("a:b;c,d", {':', ';', ','}) -> {"a", "b", "c", "d"}
      * If there are too many delimiters, stops at EOF
-     */
+     **/
     // TODO: Version with string delimiters?
     std::vector<std::string> tokenize(std::string s, std::vector<char> delims);
+
+    /**
+     * Split a string into parts that are delimited by `delim`. Finds all the
+     * occurrences of delim.
+     * e.g. tokenize("a,b,c,d", ',') -> {"a", "b", "c", "d"}
+     **/
+    std::vector<std::string> tokenize(std::string s, char delim);
 }

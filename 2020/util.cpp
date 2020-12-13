@@ -46,4 +46,16 @@ namespace util {
 
         return result;
     }
+
+    std::vector<std::string> tokenize(std::string s, char delim) {
+        std::stringstream ss(s);
+        std::string token;
+        std::vector<std::string> result;
+
+        while (getline(ss, token, delim)) {
+            result.push_back(token);
+        }
+
+        return result;
+    }
 }
