@@ -15,11 +15,11 @@ namespace util {
     }
 
     std::vector<ll> readlls(std::ifstream& f) {
-        std::string line;
+        ll num;
         std::vector<ll> result;
 
-        while (std::getline(f, line)) {
-            result.push_back(std::stoll(line));
+        while (f >> num) {
+            result.push_back(num);
         }
 
         return result;
