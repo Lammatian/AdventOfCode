@@ -45,4 +45,16 @@ namespace util {
      * e.g. tokenize("a,b,c,d", ',') -> {"a", "b", "c", "d"}
      **/
     std::vector<std::string> tokenize(std::string s, char delim);
+
+    /**
+     * Split a string into parts that are delimited by the string `delim`.
+     * e.g. split("a,,b,,c", ",,") -> {"a", "b", "c"}
+     **/
+    std::vector<std::string> split(std::string s, std::string delim);
+
+    /**
+     * Split a string into parts that are delimited by `delims`.
+     * e.g. split("a,,b..c", {",,", ".."}) -> {"a", "b", "c"}
+     **/
+    std::vector<std::string> split(std::string s, std::vector<std::string> delims);
 }

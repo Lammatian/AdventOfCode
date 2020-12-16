@@ -58,4 +58,37 @@ namespace util {
 
         return result;
     }
+
+    std::vector<std::string> split(std::string s, std::string delim) {
+        std::vector<std::string> result;
+        size_t last = 0;
+        size_t next = 0;
+
+        while (s.find(delim, last) != std::string::npos) {
+            next = s.find(delim, last);
+            result.push_back(s.substr(last, next - last));
+            last = next + 1;
+        }
+
+        result.push_back(s.substr(last));
+
+        return result;
+    }
+
+    std::vector<std::string> split(std::string s, std::vector<std::string> delims) {
+        std::vector<std::string> result;
+        size_t last = 0;
+        size_t next = 0;
+        int delim_idx = 0;
+
+        while (s.find(delims[delim_idx], last) != std::string::npos) {
+            next = s.find(delims[delim_idx], last);
+            result.push_back(s.substr(last, next - last));
+            last = next + 1;
+            delim_idx++;
+        }
+
+        result.push_back(s.substr(last));
+        return result;
+    }
 }
