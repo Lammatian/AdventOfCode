@@ -70,7 +70,7 @@ namespace util {
             last = next + 1;
         }
 
-        result.push_back(s.substr(last));
+        result.push_back(s.substr(last + delim.size() - 1));
 
         return result;
     }
