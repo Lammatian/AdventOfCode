@@ -67,10 +67,10 @@ namespace util {
         while (s.find(delim, last) != std::string::npos) {
             next = s.find(delim, last);
             result.push_back(s.substr(last, next - last));
-            last = next + 1;
+            last = next + delim.size();
         }
 
-        result.push_back(s.substr(last + delim.size() - 1));
+        result.push_back(s.substr(last));
 
         return result;
     }
