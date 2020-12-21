@@ -1,6 +1,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <set>
 
 typedef long long ll;
 
@@ -57,4 +58,52 @@ namespace util {
      * e.g. split("a,,b..c", {",,", ".."}) -> {"a", "b", "c"}
      **/
     std::vector<std::string> split(std::string s, std::vector<std::string> delims);
+    
+    /**
+     * In-place intersection as there is none in STL lol
+     **/
+    template<typename T>
+    void intersection_ip(std::set<T>& target, const std::set<T>& other) {
+        auto it1 = target.begin();
+        auto it2 = other.begin();
+
+        while (it1 != target.end() && it2 != other.end()) {
+            if (*it1 < *it2) {
+                target.erase(it1++);
+            } else if (*it2 < *it1) {
+                ++it2;
+            } else {
+                // *it1 == *it2
+                ++it1;
+                ++it2;
+            }
+        }
+
+        target.erase(it1, target.end());
+    }
+
+    /**
+     * Not in-place intersection that is just quicker to write
+     **/
+    template<typename T>
+    std::set<T> intersection(const std::set<T>& first, const std::set<T>& second) {
+        std::set<T> result;
+        auto it1 = first.begin();
+        auto it2 = second.begin();
+
+        while (it1 != first.end() && it2 != second.end()) {
+            if (*it1 < *it2) {
+                ++it1;
+            } else if (*it2 < *it1) {
+                ++it2;
+            } else {
+                // *it1 == *it2
+                result.emplace(*it1);
+                ++it1;
+                ++it2;
+            }
+        }
+
+        return result;
+    }
 }
