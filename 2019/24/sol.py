@@ -1,7 +1,6 @@
 import sys
 from collections import Counter
-from itertools import product
-from typing import List, Tuple, Set
+from typing import List
 
 
 def prep(board: List[str]) -> set((int, int)):
