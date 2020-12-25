@@ -139,11 +139,34 @@ def best_path(b, memo):
 
 def sol1(data):
     board = Board(data)
-
     return best_path(board, {})
 
 
+def best_path_split(b, memo):
+    if b.all_collected():
+        return 0
+
+    if (b.collected, b.current_object) in memo:
+        return memo[(b.collected, b.current_object)]
+
+    best_score = 1e10
+    start_key = b.current_object
+
+    for key in b.keys.keys():
+        if not b.can_reach(key) or b.is_collected(key):
+            continue
+
+        b.collect(key)
+        score = best_path(b, memo) + b.k2o[key][start_key]
+        best_score = min(score, best_score)
+        b.uncollect(key, start_key)
+
+    memo[(b.collected, b.current_object)] = best_score
+    return best_score
+
+
 def sol2(data):
+    board = Board(data)
     pass
 
 

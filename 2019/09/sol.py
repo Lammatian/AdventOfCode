@@ -2,27 +2,24 @@ import sys
 sys.path.append('..')
 from util.intcode import Intcode
 
-def sol1(ins):
-    comp = Intcode(ins, [1])
-    out = comp.simulate()
 
-    return out[0]
+def sol1(ins):
+    comp = Intcode(ins, inputs=[1])
+    comp.run()
+
+    return comp.outputs[0]
 
 
 def sol2(ins):
-    comp = Intcode(ins, [2])
-    out = comp.simulate()
+    comp = Intcode(ins, inputs=[2])
+    comp.run()
 
-    return out[0]
-
-
-def main():
-    with open(sys.argv[1]) as f:
-        data = list(map(int, f.read().strip().split(',')))
-
-    print(sol1(data[:]))
-    print(sol2(data[:]))
+    return comp.outputs[0]
 
 
 if __name__ == '__main__':
-    main()
+    with open(sys.argv[1]) as f:
+        ins = list(map(int, f.read().strip().split(','))) 
+
+    print(sol1(ins[:]))
+    print(sol2(ins[:]))

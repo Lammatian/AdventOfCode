@@ -1,186 +1,166 @@
-from collections import defaultdict
+from enum import Enum
+from typing import List
+from queue import Queue
+
+
+class Op(Enum):
+    ADD = 1
+    MUL = 2
+    INP = 3
+    OUT = 4
+    JIT = 5
+    JIF = 6
+    LT = 7
+    EQ = 8
+    URB = 9
+    END = 99
+
+
+class PMode(Enum):
+    ABS = 0
+    IMM = 1
+    REL = 2
+
+
+class Parameter:
+    def __init__(self, value: int, mode: PMode) -> None:
+        self.value = value
+        self.mode = mode
+
+    def __repr__(self) -> str:
+        return '({}, {})'.format(str(self.value), self.mode.name)
+
+
+c2p = {
+    Op.ADD: 3,
+    Op.MUL: 3,
+    Op.INP: 1,
+    Op.OUT: 1,
+    Op.JIT: 2,
+    Op.JIF: 2,
+    Op.LT: 3,
+    Op.EQ: 3,
+    Op.URB: 1,
+    Op.END: 0
+}
+
+
+class Command:
+    def __init__(self, pc: int, ins: List[int]) -> None:
+        opcode = ins[pc]
+        self.params: List[Parameter] = []
+
+        self.op = Op(opcode % 100)
+        opcode //= 100
+
+        for i in range(c2p[self.op]):
+            self.params.append(Parameter(ins[pc + i + 1], PMode(opcode%10)))
+            opcode //= 10
+
+    def __repr__(self) -> str:
+        return '{} {}'.format(self.op.name, repr(self.params))
+
+
+class Status(Enum):
+    END = 0
+    RUN = 1
+
 
 class Intcode:
-    def __init__(self, ins, inputs=None, user_input=False):
-        self.ins = defaultdict(int)
-        self.user_input = user_input
-
-        for i, inst in enumerate(ins):
-            self.ins[i] = inst
-
-        self.cur = 0
-
-        if inputs is None:
-            self.inputs = []
-        else:
-            self.inputs = inputs
-
-        self.cur_inp = 0
-        self.rel_add = 0
-
+    def __init__(self, instructions: List[int], inputs: List[int] = None) -> None:
+        self.ins = instructions
+        self.ins.extend([0] * 1000)
+        self.pc = 0
+        self.rel_base = 0
+        
+        self.inputs = Queue()
         self.outputs = []
 
-    def simulate(self):
-        while self.cur >= 0:
-            self.cur = self.parse_command()
+        if inputs:
+            for i in inputs:
+                self.inputs.put(i)
 
-        return self.outputs
-
-    def done(self):
-        return self.cur < 0
-
-    def is_input(self):
-        return self.ins[self.cur] % 100 == 3
-
-    def execute_command(self):
-        """
-        Parse and execute the command, updating current pointer
-        If command produced an output, return it
-
-        If waiting for input, return -2
-        """
-        last_cur = self.cur
-        out_len = len(self.outputs)
-        self.cur = self.parse_command()
-        
-        if len(self.outputs) > out_len:
-            return self.outputs[-1]
-        elif not self.user_input and last_cur == self.cur:
-            return -2
-
-    def add_input(self, new_input):
-        self.inputs.append(new_input)
-
-    def parse_command(self):
-        """
-        Parse command and return next position
-        If no next position, return -1
-        """
-        op_code = self.ins[self.cur]
-        op = op_code % 100
-        modes = [self.digit(op_code, i) for i in range(2, 5)]
-
-        if op < 3: # add/mul
-            self.print_current_cmd(3)
-            a1 = self.get_val(self.cur + 1, modes[0])
-            a2 = self.get_val(self.cur + 2, modes[1])
-            a3 = self.get_val(self.cur + 3, modes[2], True)
-            result = a1 + a2 if op == 1 else a1 * a2
-            self.ins[a3] = result
-            return self.cur + 4
-        elif op == 3: # input
-            self.print_current_cmd(1)
-            if self.cur_inp >= len(self.inputs):
-                if self.user_input:
-                    while True:
-                        try:
-                            move = int(input('Give input: '))
-                            break
-                        except ValueError:
-                            continue
-
-                    self.inputs.append(move)
-                else:
-                    return self.cur
-
-            a1 = self.get_val(self.cur + 1, modes[0], True)
-            self.ins[a1] = self.inputs[self.cur_inp]
-            self.cur_inp += 1
-            return self.cur + 2
-        elif op == 4: # output
-            self.print_current_cmd(1)
-            a1 = self.get_val(self.cur + 1, modes[0])
-            self.outputs.append(a1)
-            return self.cur + 2
-        elif op == 5: # jump if true
-            self.print_current_cmd(2)
-            a1 = self.get_val(self.cur + 1, modes[0])
-            a2 = self.get_val(self.cur + 2, modes[1])
-
-            if a1 != 0:
-                return a2
-            
-            return self.cur + 3
-        elif op == 6: # jump if false
-            self.print_current_cmd(2)
-            a1 = self.get_val(self.cur + 1, modes[0])
-            a2 = self.get_val(self.cur + 2, modes[1])
-
-            if a1 == 0:
-                return a2
-            
-            return self.cur + 3
-        elif op == 7: # set less than
-            self.print_current_cmd(3)
-            a1 = self.get_val(self.cur + 1, modes[0])
-            a2 = self.get_val(self.cur + 2, modes[1])
-            a3 = self.get_val(self.cur + 3, modes[2], True)
-
-            if a1 < a2:
-                self.ins[a3] = 1
-            else:
-                self.ins[a3] = 0
-
-            return self.cur + 4
-        elif op == 8: # set equals
-            self.print_current_cmd(3)
-            a1 = self.get_val(self.cur + 1, modes[0])
-            a2 = self.get_val(self.cur + 2, modes[1])
-            a3 = self.get_val(self.cur + 3, modes[2], True)
-
-            if a1 == a2:
-                self.ins[a3] = 1
-            else:
-                self.ins[a3] = 0
-
-            return self.cur + 4
-        elif op == 9: # update relative address
-            self.print_current_cmd(1)
-            a1 = self.get_val(self.cur + 1, modes[0])
-
-            self.rel_add += a1
-
-            return self.cur + 2
-        else: # 99 = end
-            return -1
-
-    def print_current_cmd(self, args):
-        """
-        Print the current command and all its `args`
-        arguments
-        """
-        return
-        print(self.cur,
-              self.rel_add,
-              [self.ins[i] for i in range(self.cur, self.cur + args + 1)],
-              self.ins[1000])
-    
-    def get_val(self, pos, mode, is_read=False):
-        """
-        Get argument value based on the mode
-        If mode = 0, gets ins[ins[pos]]
-        If mode = 1, gets ins[pos]
-        If mode = 2, gets ins[rel_add + ins[pos]]
-        """
-        if not is_read:
-            if mode == 0:
-                return self.ins[self.ins[pos]]
-            elif mode == 1:
-                return self.ins[pos]
-            elif mode == 2:
-                return self.ins[self.ins[pos] + self.rel_add]
+    def _get_parameter_value(self, parameter: PMode, is_write: bool = False) -> int:
+        if not is_write:
+            if parameter.mode == PMode.ABS:
+                return self.ins[parameter.value]
+            elif parameter.mode == PMode.IMM:
+                return parameter.value
+            elif parameter.mode == PMode.REL:
+                return self.ins[parameter.value + self.rel_base]
         else:
-            if mode == 0:
-                return self.ins[pos]
-            elif mode == 2:
-                return self.ins[pos] + self.rel_add
+            if parameter.mode == PMode.ABS:
+                return parameter.value
+            elif parameter.mode == PMode.REL:
+                return parameter.value + self.rel_base
 
-    @staticmethod
-    def digit(n, i):
-        """
-        Get i-th digit of n
-        """
-        if i >= len(str(n)):
-            return 0
+    def execute(self, wait_input: bool = True, in_val: int = -1, debug: bool = False) -> Status:
+        command = Command(self.pc, self.ins)
+        if debug:
+            print(command)
 
-        return int(str(n)[-(i + 1)])
+        if command.op == Op.ADD:
+            t1 = self._get_parameter_value(command.params[0])
+            t2 = self._get_parameter_value(command.params[1])
+            t3 = self._get_parameter_value(command.params[2], True)
+            self.ins[t3] = t1 + t2
+            self.pc += len(command.params) + 1
+        elif command.op == Op.MUL:
+            t1 = self._get_parameter_value(command.params[0])
+            t2 = self._get_parameter_value(command.params[1])
+            t3 = self._get_parameter_value(command.params[2], True)
+            self.ins[t3] = t1 * t2
+            self.pc += len(command.params) + 1
+        elif command.op == Op.INP:
+            t1 = self._get_parameter_value(command.params[0], True)
+            if not self.inputs.empty() or wait_input:
+                self.ins[t1] = self.inputs.get()
+            else:
+                self.ins[t1] = in_val
+            self.pc += len(command.params) + 1
+        elif command.op == Op.OUT:
+            t1 = self._get_parameter_value(command.params[0])
+            self.outputs.append(t1)
+            self.pc += len(command.params) + 1
+        elif command.op == Op.JIT:
+            t1 = self._get_parameter_value(command.params[0])
+            if t1:
+                self.pc = self._get_parameter_value(command.params[1])
+            else:
+                self.pc += len(command.params) + 1
+        elif command.op == Op.JIF:
+            t1 = self._get_parameter_value(command.params[0])
+            if not t1:
+                self.pc = self._get_parameter_value(command.params[1])
+            else:
+                self.pc += len(command.params) + 1
+        elif command.op == Op.LT:
+            t1 = self._get_parameter_value(command.params[0])
+            t2 = self._get_parameter_value(command.params[1])
+            t3 = self._get_parameter_value(command.params[2], True)
+            if t1 < t2:
+                self.ins[t3] = 1
+            else:
+                self.ins[t3] = 0
+            self.pc += len(command.params) + 1
+        elif command.op == Op.EQ:
+            t1 = self._get_parameter_value(command.params[0])
+            t2 = self._get_parameter_value(command.params[1])
+            t3 = self._get_parameter_value(command.params[2], True)
+            if t1 == t2:
+                self.ins[t3] = 1
+            else:
+                self.ins[t3] = 0
+            self.pc += len(command.params) + 1
+        elif command.op == Op.URB:
+            t1 = self._get_parameter_value(command.params[0])
+            self.rel_base += t1
+            self.pc += len(command.params) + 1
+        elif command.op == Op.END:
+            return Status.END
+
+        return Status.RUN
+
+    def run(self, debug=False) -> None:
+        while self.execute(debug=debug) != Status.END:
+            pass
