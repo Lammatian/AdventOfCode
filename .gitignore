@@ -16,6 +16,8 @@ cabal.sandbox.config
 *.aux
 *.hp
 *.eventlog
+*.lock
+*.vscode
 .stack-work/
 cabal.project.local
 cabal.project.local~
@@ -23,3 +25,6 @@ cabal.project.local~
 .ghc.environment.*
 sol
 input**.txt
+**/__pycache__/
+*.py[cod]
+*$py.class
