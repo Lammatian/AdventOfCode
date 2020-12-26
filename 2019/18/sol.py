@@ -1,24 +1,34 @@
 import sys
 from copy import deepcopy
 from queue import PriorityQueue, Queue
+from typing import List
 
 
 class Board:
     # ASSUMES EACH TWO PATHS TO THE SAME THING NEED SAME KEYS
     # (holds for my input lol)
-    def __init__(self, board_str):
+    def __init__(self, board_str: List[str], divided: bool = False):
+        # String representation of a board
         self.board = board_str
+        # Distances from keys to other keys
         self.k2o = {}
+        # Quadrants of keys
+        self.k2q = {}
+        self.divided = divided
 
+        # Map from key to it's coordinates
         self.keys = {}
-        self.start_position = None
-        self.current_object = '@'
+        # 0 is top-right quadrant, then clockwise
+        self.quadrants = [0] if not divided else [0, 1, 2, 3]
+        # Start position for each quadrant if applicable
+        self.start_positions = {}
+        self.current_objects = {q: '@' for q in self.quadrants}
         self.reach = {}
 
         for y in range(len(board_str)):
             for x, point in enumerate(board_str[y]):
                 if point == '@':
-                    self.start_position = (x, y)
+                    self.start_positions[self._quadrant(x, y)] = (x, y)
                 elif point not in ['.', '#']:
                     if self._is_key((x, y)):
                         self.keys[point] = (x, y)
@@ -27,16 +37,37 @@ class Board:
         self.collected = 0
 
         self._get_key_to_object_distances()
-        self._get_reachable(self.start_position, deepcopy(board_str), set())
+
+        for quad, start_pos in self.start_positions.items():
+            self._get_reachable(start_pos, deepcopy(board_str), set(), quad)
 
     def __gt__(self, board2):
         return len(self.collected) >= len(board2.collected)
+
+    def _quadrant(self, x, y):
+        if self.divided:
+            # lines W//2 and H//2 is where the border between quadrants is for
+            # the starting points
+            H = len(self.board)
+            W = len(self.board[0])
+
+            if x > W//2 and y < H//2:
+                return 0
+            elif x > W//2 and y > H//2:
+                return 1
+            elif x < W//2 and y > H//2:
+                return 2
+            else:
+                return 3
+        else:
+            # Just one "quadrant"
+            return 0
 
     def _get_key_to_object_distances(self):
         for key, position in self.keys.items():
             self._get_distances_from_key(key, position)
 
-    def _get_reachable(self, start_pos, visited, keys_needed):
+    def _get_reachable(self, start_pos, visited, keys_needed, quadrant):
         visited[start_pos[1]][start_pos[0]] = '#'
 
         for n_pos in Board._neighbours(*start_pos):
@@ -45,12 +76,16 @@ class Board:
 
             if Board._is_object(visited, n_pos):
                 if n_obj.isupper():
-                    self._get_reachable(n_pos, visited, set(list(keys_needed) + [n_obj.lower()]))
+                    self._get_reachable(n_pos, visited, set(list(keys_needed) + [n_obj.lower()]), quadrant)
                 else:
                     self.reach[n_obj] = Board._k2k(keys_needed)
-                    self._get_reachable(n_pos, visited, keys_needed)
+                    self.k2q[n_obj] = quadrant
+                    self._get_reachable(n_pos, visited, keys_needed, quadrant)
             elif n_obj == '.':
-                self._get_reachable(n_pos, visited, keys_needed)
+                self._get_reachable(n_pos, visited, keys_needed, quadrant)
+            
+    def print_board(self):
+        print('\n'.join(map(lambda x: ''.join(x), self.board)))
 
     # shortest distance from key to all objects (even if unreachable)
     def _get_distances_from_key(self, key, key_position):
@@ -86,11 +121,13 @@ class Board:
 
     def collect(self, key):
         self.collected += 1 << (ord(key) - ord('a'))
-        self.current_object = key
+        quadrant = self.k2q[key]
+        self.current_objects[quadrant] = key
 
     def uncollect(self, key, prev_key):
-        self.collected -= 1 << (ord(key) - ord('a')) 
-        self.current_object = prev_key
+        self.collected -= 1 << (ord(key) - ord('a'))
+        quadrant = self.k2q[key]
+        self.current_objects[quadrant] = prev_key
 
     @staticmethod
     def _k2k(keys):
@@ -118,11 +155,11 @@ def best_path(b, memo):
     if b.all_collected():
         return 0
 
-    if (b.collected, b.current_object) in memo:
-        return memo[(b.collected, b.current_object)]
+    if (b.collected, b.current_objects[0]) in memo:
+        return memo[(b.collected, b.current_objects[0])]
 
     best_score = 1e10
-    start_key = b.current_object
+    start_key = b.current_objects[0]
 
     for key in b.keys.keys():
         if not b.can_reach(key) or b.is_collected(key):
@@ -133,7 +170,7 @@ def best_path(b, memo):
         best_score = min(score, best_score)
         b.uncollect(key, start_key)
 
-    memo[(b.collected, b.current_object)] = best_score
+    memo[(b.collected, b.current_objects[0])] = best_score
     return best_score
 
 
@@ -146,28 +183,41 @@ def best_path_split(b, memo):
     if b.all_collected():
         return 0
 
-    if (b.collected, b.current_object) in memo:
-        return memo[(b.collected, b.current_object)]
+    if (b.collected, tuple(sorted(b.current_objects.values()))) in memo:
+        return memo[(b.collected, tuple(sorted(b.current_objects.values())))]
 
     best_score = 1e10
-    start_key = b.current_object
+    start_keys = b.current_objects
 
     for key in b.keys.keys():
         if not b.can_reach(key) or b.is_collected(key):
             continue
 
+        quadrant = b.k2q[key]
+        prev_key = start_keys[quadrant]
         b.collect(key)
-        score = best_path(b, memo) + b.k2o[key][start_key]
+        score = best_path_split(b, memo) + b.k2o[key][prev_key]
         best_score = min(score, best_score)
-        b.uncollect(key, start_key)
+        b.uncollect(key, prev_key)
 
-    memo[(b.collected, b.current_object)] = best_score
+    memo[(b.collected, tuple(sorted(b.current_objects.values())))] = best_score
     return best_score
 
 
 def sol2(data):
-    board = Board(data)
-    pass
+    H = len(data)
+    W = len(data[0])
+
+    for x in range(-1, 2):
+        for y in range(-1, 2):
+            if x * y == 0:
+                data[H//2 + y][W//2 + x] = '#'
+            else:
+                data[H//2 + y][W//2 + x] = '@'
+
+    board = Board(data, divided=True)
+
+    return best_path_split(board, {})
 
 
 def main():
