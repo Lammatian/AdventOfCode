@@ -161,6 +161,37 @@ class Intcode:
 
         return Status.RUN
 
-    def run(self, debug=False) -> None:
+    # Returns True if run finished naturally, False otherwise
+    def run(self, debug=False, interactive=False, print_out=False, print_last=False) -> bool:
+        command_ord = list(map(ord, "Command?\n"))
+        last_out = []
+
         while self.execute(debug=debug) != Status.END:
-            pass
+            outs = self.outputs
+
+            if outs and outs[-1] == ord('\n'):
+                if print_out:
+                    print(''.join(map(chr, self.outputs)), end='')
+
+                last_out += outs
+                self.outputs = []
+
+            if outs == command_ord and self.inputs.empty():
+                if not interactive:
+                    if print_last:
+                        print('NO INPUTS, STOPPING RUN')
+
+                    return False
+                else:
+                    command = list(map(ord, input('Input: '))) + [ord('\n')]
+
+                    for c in command:
+                        self.inputs.put(c)
+                
+            if outs == command_ord:
+                last_out = []
+            
+        if print_last:
+            print(''.join(map(chr, last_out)))
+
+        return True
