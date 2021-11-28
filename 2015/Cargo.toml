@@ -1,0 +1,30 @@
+[package]
+name = "aoc2015"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "day01"
+path = "src/day01/main.rs"
+
+[[bin]]
+name = "day02"
+path = "src/day02/main.rs"
+
+[[bin]]
+name = "day03"
+path = "src/day03/main.rs"
+
+[[bin]]
+name = "day04"
+path = "src/day04/main.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+itertools = "0.10.1"
+md5 = "0.7.0"
+
+[[bin]]
+name = "day05"
+path = "src/day05/main.rs"
