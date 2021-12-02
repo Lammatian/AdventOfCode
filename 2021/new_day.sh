@@ -5,6 +5,7 @@ printf -v DAYNUM "%02d" $DAY
 mkdir -p "inputs/day${DAYNUM}"
 mkdir -p "src/day${DAYNUM}"
 
+if [ ! -f "src/day${DAYNUM}/main.py" ]; then
 cat <<EOT > src/day${DAYNUM}/main.py
 import os
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -30,6 +31,7 @@ if __name__ == '__main__':
     main()
 
 EOT
+fi
 
 if [ ! -f "inputs/day${DAYNUM}/input" ]; then
     curl "https://adventofcode.com/2021/day/${DAY}/input" --cookie "session=${AOC_SESSION}" > "inputs/day${DAYNUM}/input"
