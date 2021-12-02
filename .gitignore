@@ -24,7 +24,8 @@ cabal.project.local~
 .HTF/
 .ghc.environment.*
 sol
-input**.txt
+input**
+**/inputs/
 **/__pycache__/
 *.py[cod]
 *$py.class
