@@ -10,9 +10,8 @@ def part1(inp):
                 counts[i] += 1
 
     res = int(''.join(['1' if counts[i] > len(inp)//2 else '0' for i in range(len(inp[0]))]), 2)
-    res2 = int(''.join(['1' if counts[i] <= len(inp)//2 else '0' for i in range(len(inp[0]))]), 2)
 
-    return res * res2
+    return res * ((1 << len(inp[0])) - res - 1)
 
 
 def part2(inp):
@@ -39,8 +38,6 @@ def part2(inp):
             res2 = int(inp_[0], 2)
 
     return res1 * res2
-
-
 
 
 def main():
