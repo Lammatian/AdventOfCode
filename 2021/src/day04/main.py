@@ -1,60 +1,38 @@
 import os
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-
-def finished(board, nums):
-    for row in board:
-        finished = True
-        for num in row:
-            if num not in nums:
-                finished = False
-        if finished:
-            return True
-
-    for i in range(5):
-        finished = True
-        for num in [row[i] for row in board]:
-            if num not in nums:
-                finished = False
-        if finished:
-            return True
-
-
-def total(board, nums):
-    unmarked = 0
-    for row in board:
-        for num in row:
-            if num not in nums:
-                unmarked += num
-
-    return unmarked
+import numpy as np
 
 
 def part1(nums, boards):
-    for i in range(len(nums)):
+    for num in nums:
         for board in boards:
-            if finished(board, nums[:(i+1)]):
-                return nums[i] * total(board, nums[:(i+1)])
+            board[board == num] = 0
+        
+            if np.count_nonzero(board.sum(axis=0)) < 5:
+                return num * board.sum()
+            if np.count_nonzero(board.sum(axis=1)) < 5:
+                return num * board.sum()
 
 
 def part2(nums, boards):
-    fin_boards = []
-    last_board = None
-    last_idx = None
+    last_board, last_num = None, None
 
-    for i in range(len(nums)):
-        fin_idxs = []
-        for j, board in enumerate(boards):
-            if finished(board, nums[:(i+1)]):
-                fin_idxs.append(j)
+    for num in nums:
+        for board in boards:
+            if np.count_nonzero(board.sum(axis=0)) < 5:
+                continue
+            if np.count_nonzero(board.sum(axis=1)) < 5:
+                continue
 
-        for j in fin_idxs[::-1]:
-            b = boards.pop(j)
-            last_board = b
-            last_idx = i
-            fin_boards.append(b)
+            board[board == num] = 0
 
-    return nums[last_idx] * total(last_board, nums[:(last_idx + 1)])
+            if np.count_nonzero(board.sum(axis=0)) < 5:
+                last_board = board
+            if np.count_nonzero(board.sum(axis=1)) < 5:
+                last_num = num
+
+    return last_num * last_board.sum()
 
 
 def main():
@@ -70,7 +48,7 @@ def main():
         for j in range(5):
             board.append(list(map(int, inp[i + j].split())))
 
-        boards.append(board)
+        boards.append(np.array(board))
     
     print(part1(nums, boards))
     print(part2(nums, boards))
