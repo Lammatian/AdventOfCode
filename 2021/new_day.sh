@@ -23,8 +23,8 @@ def main():
     with open(f'{dir_path}/../../inputs/day${DAYNUM}/input') as f:
         inp = f.read().strip()
     
-    print(part1(inp))
-    print(part2(inp))
+    print(part1(inp[:]))
+    print(part2(inp[:]))
 
 
 if __name__ == '__main__':
