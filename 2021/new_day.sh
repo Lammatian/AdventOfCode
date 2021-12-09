@@ -21,7 +21,9 @@ def part2(inp):
 
 def main():
     with open(f'{dir_path}/../../inputs/day${DAYNUM}/input') as f:
-        inp = f.read().strip()
+        inp = list(map(lambda x: x, f.read().strip().split('\n')))
+
+    print(inp)
     
     print(part1(inp[:]))
     print(part2(inp[:]))
