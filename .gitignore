@@ -25,6 +25,7 @@ cabal.project.local~
 .ghc.environment.*
 sol
 input**
+*.swp
 **/inputs/
 **/__pycache__/
 *.py[cod]
