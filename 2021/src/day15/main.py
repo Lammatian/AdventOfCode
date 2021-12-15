@@ -1,6 +1,7 @@
 import os
 dir_path = os.path.dirname(os.path.realpath(__file__))
 from collections import defaultdict
+from heapq import heappush, heappop
 
 
 def part1(inp):
@@ -30,14 +31,14 @@ def part1(inp):
 def part2(inp):
     distances = defaultdict(lambda: -1)
     distances[(0, 0)] = 0
-    current = [(0, 0)]
+    current = [(0, (0, 0))]
     Nx = len(inp[0])
     Ny = len(inp)
     Dx = [0, 1, 0, -1]
     Dy = [1, 0, -1, 0]
 
     while current:
-        x, y = current.pop(0)
+        d, (x, y) = heappop(current)
 
         for dx, dy in zip(Dx, Dy):
             nx = x + dx
@@ -51,10 +52,13 @@ def part2(inp):
                     val -= 9
 
             if 0 <= nx < 5 * Nx and 0 <= ny < 5 * Ny:
-                d = distances[(x, y)] + val
-                if distances[(nx, ny)] < 0 or distances[(nx, ny)] > d:
-                    distances[(nx, ny)] = d
-                    current.append((nx, ny))
+                nd = d + val
+                if distances[(nx, ny)] < 0 or distances[(nx, ny)] > nd:
+                    distances[(nx, ny)] = nd
+                    heappush(current, (nd, (nx, ny)))
+
+        if (5 * Nx - 1, 5 * Ny - 1) in distances:
+            break
 
     return distances[(5 * Nx - 1, 5 * Ny - 1)] 
 
