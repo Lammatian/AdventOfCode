@@ -5,114 +5,12 @@ from time import sleep
 import curses
 from curses import wrapper
 from random import random
+from input_generator import InputGenerator
+from visualiser import Visualiser
 
 
-RES_X = 200
-RES_Y = 50
 FRAMES = 60
 ANIMATION_LENGTH = 0.3
-
-
-def generate_letter_mappings(letter_mappings_txt):
-    mapping = {}
-
-    for i in range(ord('Z') - ord('A') + 1):
-        letter = chr(ord('A') + i)
-        start_x = 5 * i
-        letter_ascii = [line[start_x:start_x+5] for line in letter_mappings_txt]
-        coords = set()
-
-        for y, line in enumerate(letter_ascii):
-            for x, c in enumerate(line):
-                if c == '#':
-                    coords.add((x, y))
-            
-        mapping[letter] = coords
-
-    return mapping
-
-
-def generate_folds(coords, num_folds):
-    folds = []
-    max_x = max(x for x, y in coords)
-    max_y = max(y for x, y in coords)
-
-    for _ in range(num_folds):
-        fd = 'x' if random() > 0.7 else 'y'
-        if fd == 'x':
-            fv = max_x + 1
-            max_x = 2 * fv
-        else:
-            fv = max_y + 1
-            max_y = 2 * fv
-        
-        folds = [(fd, fv)] + folds
-
-    return folds
-
-
-def map_string_to_coords(letter_mapping, string):
-    coords = set()
-    for i, c in enumerate(string):
-        letter_coords = letter_mapping[c]
-
-        for x, y in letter_coords:
-            coords.add((x + 5 * i, y))
-
-    return coords
-
-
-def generate_input(user_input, num_folds):
-    with open('ascii_alphabet.txt') as f:
-        letter_mappings_txt = f.readlines()
-
-    LETTER_MAPPING = generate_letter_mappings(letter_mappings_txt)
-    coords = map_string_to_coords(LETTER_MAPPING, user_input)
-    folds = generate_folds(coords, num_folds)
-    str_input = ''
-
-    for x, y in generate(folds[::-1], coords):
-        str_input += f'{x},{y}\n'
-        #print(f'{x},{y}')
-
-    str_input += '\n'
-    #print()
-
-    for fd, fv in folds:
-        str_input += f'fold along {fd}={fv}\n'
-        #print(f'fold along {fd}={fv}')
-
-    return str_input
-
-
-def generate(folds, coords):
-    # Folds are in form ('x|y', value)
-    for fd, fv in folds:
-        old = set()
-        new = set()
-        for x, y in coords:
-            if fd == 'x':
-                flipped = (2 * fv - x, y)
-            else:
-                flipped = (x, 2 * fv - y)
-
-            if flipped[0] < 0 or flipped[1] < 0:
-                print(fd, fv, x, y)
-
-            if random() < 0.5:
-                old.add((x, y))
-
-                if random() < 0.20:
-                    new.add(flipped)
-            else:
-                new.add(flipped)
-
-                if random() < 0.20:
-                    old.add((x, y))
-            
-        coords = list(old) + list(new)
-
-    return coords
 
 
 def part1(ins, folds):
@@ -141,11 +39,13 @@ def part1(ins, folds):
     return len(visible)
 
 
-def part2(ins, folds, window):
+#def part2(ins, folds, window):
+def part2(ins, folds, visualiser):
     visible = set(ins)
 
     for fold in folds:
-        visualise(window, RES_X, RES_Y, visible, fold, True, True)
+        visualiser.animate_fold(visible, fold)
+        #visualise(window, RES_X, RES_Y, visible, fold, True, True)
 
         to_rem = set()
         to_add = set()
@@ -166,7 +66,8 @@ def part2(ins, folds, window):
         for p in to_add:
             visible.add(p)
 
-        visualise(window, RES_X, RES_Y, visible, fold, True, False)
+        #visualise(window, RES_X, RES_Y, visible, fold, True, False)
+        visualiser.display_fold_result(visible, fold)
 
     max_x = max([x for x, y in visible])
     max_y = max([y for x, y in visible])
@@ -175,7 +76,8 @@ def part2(ins, folds, window):
     for x, y in visible:
         board[y][x] = '#'
 
-    final_visual(window, visible)
+    visualiser.display_final_result(visible)
+    #final_visual(window, visible)
 
     return len(visible)
 
@@ -208,10 +110,10 @@ def display(window, colour_display):
     display, colours = colour_display
     for y, (display_line, line_colours) in enumerate(zip(display, colours)):
         for x, (v, c) in enumerate(zip(display_line, line_colours)):
-                if c == (256, 0, 0):
-                    window.addstr(y, x, v, curses.COLOR_RED)
-                else:
-                    window.addstr(y, x, v, curses.COLOR_WHITE)
+            if c == (256, 0, 0):
+                window.addstr(y, x, v, curses.COLOR_RED)
+            else:
+                window.addstr(y, x, v, curses.COLOR_WHITE)
         window.addstr(y, len(display_line) + 1, '\n')
 
 
@@ -305,30 +207,30 @@ def final_visual(window, visible):
 
 def main(window):
     global RES_X, RES_Y
-    user_input = sys.argv[1]
+    user_input = sys.argv[1].upper()
     if len(sys.argv) > 2:
         num_folds = int(sys.argv[2])
     else:
         num_folds = 12
 
-    inp = generate_input(user_input, num_folds)
+    ig = InputGenerator('ascii_alphabet.txt')
+    inp = ig.generate_input(user_input, num_folds)
     inp = list(map(lambda x: x, inp.split('\n')))
-    #with open(f'{dir_path}/../../inputs/day13/paparapa') as f:
-        #inp = list(map(lambda x: x, f.read().strip().split('\n')))
 
-    ins = [tuple(map(int, x.split(','))) for x in inp if x and x[0].isdigit()]
+    coords = [tuple(map(int, x.split(','))) for x in inp if x and x[0].isdigit()]
     folds = [(x.split('=')[0][-1], int(x.split('=')[1])) for x in inp if x and x[0] == 'f']
-    print(ins, folds)
+    print(coords, folds)
     
     curses.start_color()
     curses.use_default_colors()
     curses.curs_set(0)
     window.clear()
-    RES_Y, RES_X = window.getmaxyx()
-    RES_Y -= 5
-    RES_X -= 3
-    print(part1(ins[:], folds[:]))
-    print(part2(ins[:], folds[:], window))
+    res_y, res_x = window.getmaxyx()
+    res_y -= 1
+    res_x -= 1
+    visualiser = Visualiser(window, res_x, res_y, ANIMATION_LENGTH, FRAMES)
+    print(part1(coords[:], folds[:]))
+    print(part2(coords[:], folds[:], visualiser))
 
 
 if __name__ == '__main__':
