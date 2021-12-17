@@ -7,18 +7,27 @@ class Visualiser():
         # Can set own resolution
         curses.endwin()
         self.window = window
-        self.RES_X = res_x
-        self.RES_Y = res_y
+        self.RES_X = res_x - 1
+        self.RES_Y = res_y - 1
         self.ANIMATION_TIME = animation_time
         self.FRAMES = animation_frames
         self.SQUARE = chr(9608)
+
+    @staticmethod
+    def _squeeze_coords_to_window(coords, res_x, res_y, max_x, max_y):
+        window_coords = set()
+        for x, y in coords:
+            wx = res_x * x // max_x
+            wy = res_y * y // max_y
+            window_coords.add((wx, wy))
+
+        return window_coords
 
     def animate_fold(self, coords, fold):
         vmax_x = max([x for x, y in coords])
         vmax_y = max([y for x, y in coords])
         res_x = min(self.RES_X, vmax_x)
         res_y = min(self.RES_Y, vmax_y)
-        window_coords = set()
 
         if fold[0] == 'x':
             max_x = 2 * fold[1]
@@ -27,6 +36,7 @@ class Visualiser():
             max_x = vmax_x
             max_y = 2 * fold[1]
 
+        window_coords = set()
         for x, y in coords:
             wx = res_x * x // max_x
             wy = res_y * y // max_y
@@ -76,13 +86,10 @@ class Visualiser():
             res_y = min(2 * vmax_y + 1, self.RES_Y)
             max_y = 2 * vmax_y + 1
 
-        display_coords = set()
-        for x, y in coords:
-            dx = res_x * x // max_x
-            dy = res_y * y // max_y
-            display_coords.add((dx, dy))
+        window_coords = Visualiser._squeeze_coords_to_window(
+                coords, res_x, res_y, max_x, max_y)
 
-        to_display = self.generate_display(res_x, res_y, display_coords)
+        to_display = self.generate_display(res_x, res_y, window_coords)
         self.display(to_display)
         self.window.refresh()
         sleep(self.ANIMATION_TIME)
@@ -92,15 +99,12 @@ class Visualiser():
         max_y = max([y for x, y in coords])
         res_x = min(max_x, self.RES_X)
         res_y = min(max_y, self.RES_Y)
-        display_coords = set()
 
-        for x, y in coords:
-            dx = res_x * x // max_x
-            dy = res_y * y // max_y
-            display_coords.add((dx, dy))
+        window_coords = Visualiser._squeeze_coords_to_window(
+                coords, res_x, res_y, max_x, max_y)
 
         self.window.clear()
-        to_display = self.generate_display(res_x, res_y, display_coords)
+        to_display = self.generate_display(res_x, res_y, window_coords)
         self.display(to_display)
         self.window.refresh()
         sleep(20)
