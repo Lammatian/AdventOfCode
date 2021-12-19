@@ -62,6 +62,7 @@ class InputGenerator():
                 
             mapping[letter] = coords
 
+        mapping[' '] = set()
         return mapping
 
     def _map_text_to_coords(self, text):
