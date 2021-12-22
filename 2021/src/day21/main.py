@@ -47,9 +47,9 @@ def dp(mem, s, p, t, player):
     if s in mem and p in mem[s] and t in mem[s][p]:
         return mem[s][p][t]
     elif s[player] >= MAX_SCORE:
-            return 1
+        return 1
     elif s[(player + 1) % 2] >= MAX_SCORE:
-            return 0
+        return 0
 
     result = 0
     for k, v in outcomes.items():
