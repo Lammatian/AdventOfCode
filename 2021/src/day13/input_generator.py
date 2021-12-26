@@ -92,7 +92,7 @@ class InputGenerator():
         max_y = max(y for x, y in coords)
 
         for _ in range(num_folds):
-            fd = 'x' if random() > 0.7 else 'y'
+            fd = 'x' if random() > 0.5 else 'y'
             if fd == 'x':
                 fv = max_x + 1
                 max_x = 2 * fv

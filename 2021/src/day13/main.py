@@ -39,6 +39,7 @@ def foldify(ins, folds, visualiser):
             visible.add(p)
 
         visualiser.display_fold_result(visible, fold)
+        visualiser.animate_stretch(visible, fold)
 
     visualiser.display_final_result(visible)
 

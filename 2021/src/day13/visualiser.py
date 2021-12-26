@@ -36,11 +36,8 @@ class Visualiser():
             max_x = vmax_x
             max_y = 2 * fold[1]
 
-        window_coords = set()
-        for x, y in coords:
-            wx = res_x * x // max_x
-            wy = res_y * y // max_y
-            window_coords.add((wx, wy))
+        window_coords = Visualiser._squeeze_coords_to_window(
+                coords, res_x, res_y, max_x, max_y)
 
         fd, fv = fold
         if fd == 'x':
@@ -71,6 +68,54 @@ class Visualiser():
             self.display(to_display)
             self.window.refresh()
             sleep(self.ANIMATION_TIME / self.FRAMES)
+
+    def animate_stretch(self, coords, prev_fold):
+        vmax_x = max(x for x, y in coords)
+        vmax_y = max(y for x, y in coords)
+
+        # Don't stretch if there is no reason to
+        if 2 * vmax_x + 1 < self.RES_X and 2 * vmax_y + 1 < self.RES_Y:
+            return
+        elif prev_fold[0] == 'y' and 2 * vmax_y + 1 < self.RES_Y:
+            return
+        elif prev_fold[0] == 'x' and 2 * vmax_x + 1 < self.RES_X:
+            return
+
+        if prev_fold[0] == 'x':
+            res_x = min(2 * vmax_x + 1, self.RES_X)
+            max_x = 2 * vmax_x + 1
+            res_y = min(vmax_y, self.RES_Y)
+            max_y = vmax_y
+            fx = prev_fold[1]
+            fy = None
+        else:
+            res_x = min(vmax_x, self.RES_X)
+            max_x = vmax_x
+            res_y = min(2 * vmax_y + 1, self.RES_Y)
+            max_y = 2 * vmax_y + 1
+            fx = None
+            fy = prev_fold[1]
+
+        window_coords = Visualiser._squeeze_coords_to_window(
+                coords, res_x, res_y, max_x, max_y)
+
+        for frame in range(self.FRAMES):
+            frame_stretch_coords = set()
+            for x, y in window_coords:
+                move_x = (x + 1) * frame // self.FRAMES if fx else 0
+                move_y = (y + 1) * frame // self.FRAMES if fy else 0
+                cx = x + move_x
+                cy = y + move_y
+                frame_stretch_coords.add((cx, cy))
+
+            to_display = self.generate_display(
+                    res_x, res_y, frame_stretch_coords)
+            self.display(to_display)
+            self.window.refresh()
+            sleep(self.ANIMATION_TIME / self.FRAMES)
+            self.window.clear()
+
+        sleep(self.ANIMATION_TIME)
 
     def display_fold_result(self, coords, fold):
         vmax_x = max([x for x, y in coords])
