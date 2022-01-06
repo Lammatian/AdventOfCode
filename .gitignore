@@ -26,6 +26,7 @@ cabal.project.local~
 sol
 input**.txt
 *.swp
+*.swo
 **/inputs/
 **/__pycache__/
 *.py[cod]
