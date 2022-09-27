@@ -24,7 +24,7 @@ def main():
         inp = list(map(lambda x: x, f.read().strip().split('\n')))
 
     print(inp)
-    
+
     print(part1(inp[:]))
     print(part2(inp[:]))
 
