@@ -18,13 +18,20 @@ if [ ! -f $SRC_PATH ]; then
 cat <<EOT > $SRC_PATH
 import os
 dir_path = os.path.dirname(os.path.realpath(__file__))
-from functools import *
+import sys
+from itertools import product, permutations, combinations
+from functools import reduce
 from collections import Counter, defaultdict
 import numpy as np
 
 
 def main():
-    with open(f'{dir_path}/../../${INP_PATH}') as f:
+    if len(sys.argv) > 1:
+        filepath = f'{dir_path}/../../$(dirname $INP_PATH)/' + sys.argv[1]
+    else:
+        filepath = f'{dir_path}/../../${INP_PATH}'
+
+    with open(filepath) as f:
         inp = list(map(lambda x: x, f.read().strip().split('\n')))
 
     print(inp)
@@ -51,4 +58,5 @@ if [ ! -f $INP_PATH ]; then
     curl "https://adventofcode.com/${YEAR}/day/${DAY}/input" --cookie "session=${AOC_SESSION}" > $INP_PATH
 fi
 
-vim $SRC_PATH
+# Start at line 17 i.e. where the input is read/parsed
+vim -c ":17" $SRC_PATH
