@@ -23,23 +23,17 @@ def main():
 
 
 def part1(inp):
+    inp = list(inp)
     removed = True
     while removed:
-        tbr = []
-        prev_rmd = False
-        for i in range(len(inp) - 1):
-            if inp[i].lower() == inp[i + 1].lower() and inp[i] != inp[i + 1]:
-                if prev_rmd:
-                    continue
-                tbr.append(i)
-                prev_rmd = True
-            else:
-                prev_rmd = False
-        if tbr:
-            for idx in tbr[::-1]:
-                inp = inp[:idx] + inp[idx + 2:]
-        else:
-            removed = False
+        removed = False
+        for i in range(len(inp) - 1, 0, -1):
+            if i >= len(inp):
+                continue
+            if inp[i].lower() == inp[i - 1].lower() and inp[i] != inp[i - 1]:
+                inp.pop(i)
+                inp.pop(i - 1)
+                removed = True
     return len(inp)
 
 
