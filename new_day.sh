@@ -25,6 +25,10 @@ from collections import Counter, defaultdict
 import numpy as np
 
 
+def parse(line):
+    return line
+
+
 def main():
     if len(sys.argv) > 1:
         filepath = f'{dir_path}/../../$(dirname $INP_PATH)/' + sys.argv[1]
@@ -32,7 +36,7 @@ def main():
         filepath = f'{dir_path}/../../${INP_PATH}'
 
     with open(filepath) as f:
-        inp = list(map(lambda x: x, f.read().strip().split('\n')))
+        inp = list(map(lambda x: parse(x), f.read().strip().split('\n')))
 
     print(inp)
 
