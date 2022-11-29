@@ -63,5 +63,5 @@ if [ ! -f $INP_PATH ]; then
     curl "https://adventofcode.com/${YEAR}/day/${DAY}/input" --cookie "session=${AOC_SESSION}" > $INP_PATH
 fi
 
-# Start at line 17 i.e. where the input is read/parsed
-vim -c ":17" $SRC_PATH
+# Start where the input is parsed
+vim -c ":12" $SRC_PATH
