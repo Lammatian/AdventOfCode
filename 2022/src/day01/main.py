@@ -9,7 +9,7 @@ from pyutils import *
 
 
 def parse(line):
-    return int(line) if line else 0
+    return sum(map(int, line.split()))
 
 
 def main():
@@ -19,7 +19,7 @@ def main():
         filepath = f'{dir_path}/../../inputs/day01/input'
 
     with open(filepath) as f:
-        inp = list(map(lambda x: parse(x), f.read().strip().split('\n')))
+        inp = list(map(lambda x: parse(x), f.read().strip().split('\n\n')))
 
     print(inp)
 
@@ -28,31 +28,11 @@ def main():
 
 
 def part1(inp):
-    most = 0
-    i = 0
-    while i < len(inp):
-        curr = 0
-        while i < len(inp) and inp[i] != 0:
-            curr += inp[i]
-            i += 1
-        most = max(most, curr)
-        curr = 0
-        i += 1
-    return most
+    return max(inp)
 
 
 def part2(inp):
-    cals = []
-    i = 0
-    while i < len(inp):
-        curr = 0
-        while i < len(inp) and inp[i] != 0:
-            curr += inp[i]
-            i += 1
-        cals.append(curr)
-        i += 1
-    cals = sorted(cals)
-    return cals[-1] + cals[-2] + cals[-3]
+    return sum(sorted(inp)[-3:])
 
 
 if __name__ == '__main__':
