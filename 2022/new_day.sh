@@ -60,7 +60,7 @@ EOT
 fi
 
 if [ ! -f $INP_PATH ]; then
-    curl "https://adventofcode.com/${YEAR}/day/${DAY}/input" --cookie "session=${AOC_SESSION}" > $INP_PATH
+    curl "https://adventofcode.com/${YEAR}/day/${DAY}/input" -A "github.com/Lammatian/AdventOfCode" --cookie "session=${AOC_SESSION}" > $INP_PATH
 fi
 
 # Start where the input is parsed
