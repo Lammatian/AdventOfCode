@@ -23,6 +23,12 @@ from itertools import product, permutations, combinations
 from functools import reduce
 from collections import Counter, defaultdict
 import numpy as np
+from pyutils import *
+from copy import deepcopy
+
+
+def parse(line):
+    return line
 
 
 def main():
@@ -32,12 +38,12 @@ def main():
         filepath = f'{dir_path}/../../${INP_PATH}'
 
     with open(filepath) as f:
-        inp = list(map(lambda x: x, f.read().strip().split('\n')))
+        inp = list(map(lambda x: parse(x), f.read().strip().split('\n')))
 
     print(inp)
 
-    print(part1(inp[:]))
-    print(part2(inp[:]))
+    print(part1(deepcopy(inp)))
+    print(part2(deepcopy(inp)))
 
 
 def part1(inp):
@@ -55,7 +61,8 @@ EOT
 fi
 
 if [ ! -f $INP_PATH ]; then
-    curl "https://adventofcode.com/${YEAR}/day/${DAY}/input" --cookie "session=${AOC_SESSION}" > $INP_PATH
+    curl "https://adventofcode.com/${YEAR}/day/${DAY}/input" --cookie "session=${AOC_SESSION_2}" > $INP_PATH
 fi
 
-vim -c ":16" $SRC_PATH
+# Start where the input is parsed
+vim -c ":12" $SRC_PATH
