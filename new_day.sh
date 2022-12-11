@@ -24,6 +24,7 @@ from functools import reduce
 from collections import Counter, defaultdict
 import numpy as np
 from pyutils import *
+from copy import deepcopy
 
 
 def parse(line):
@@ -41,8 +42,8 @@ def main():
 
     print(inp)
 
-    print(part1(inp[:]))
-    print(part2(inp[:]))
+    print(part1(deepcopy(inp)))
+    print(part2(deepcopy(inp)))
 
 
 def part1(inp):
