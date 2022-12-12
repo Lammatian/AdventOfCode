@@ -60,9 +60,10 @@ def part1(inp):
 
 
 def part2(inp):
-    starts = []
+    seen = set()
     R = len(inp)
     C = len(inp[0])
+    q = []
     for r, row in enumerate(inp):
         for c, val in enumerate(row):
             if val == 'S':
@@ -70,35 +71,25 @@ def part2(inp):
     for r, row in enumerate(inp):
         for c, val in enumerate(row):
             if val in 'Sa':
-                starts.append((r, c))
+                q.append((0, r, c))
+                seen.add((r, c))
 
-    best = 1e9
-    for sr, sc in starts:
-        seen = set()
-        q = []
-        seen.add((sr, sc))
-        q.append((0, sr, sc))
-
-        done = False
-        while not done and q:
-            steps, r, c = q.pop(0)
-            D = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-            for dr, dc in D:
-                rr = r + dr
-                cc = c + dc
-                if not (0 <= rr < R and 0 <= cc < C):
-                    continue
-                if inp[r][c] in 'yz' and inp[rr][cc] == 'E':
-                    best = min(best, steps + 1)
-                    done = True
-                    break
-                if not (ord(inp[rr][cc]) - ord(inp[r][c]) <= 1):
-                    continue
-                if (rr, cc) in seen:
-                    continue
-                q.append((steps + 1, rr, cc))
-                seen.add((rr, cc))
-    return best
+    while q:
+        steps, r, c = q.pop(0)
+        D = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        for dr, dc in D:
+            rr = r + dr
+            cc = c + dc
+            if not (0 <= rr < R and 0 <= cc < C):
+                continue
+            if inp[r][c] in 'yz' and inp[rr][cc] == 'E':
+                return steps + 1
+            if not (ord(inp[rr][cc]) - ord(inp[r][c]) <= 1):
+                continue
+            if (rr, cc) in seen:
+                continue
+            q.append((steps + 1, rr, cc))
+            seen.add((rr, cc))
 
 
 if __name__ == '__main__':
