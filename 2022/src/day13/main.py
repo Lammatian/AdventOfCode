@@ -8,12 +8,11 @@ import numpy as np
 from pyutils import *
 from copy import deepcopy
 from functools import cmp_to_key
-import ast
 
 
 def parse(line):
     a, b = line.split('\n')
-    return [ast.literal_eval(a), ast.literal_eval(b)]
+    return [eval(a), eval(b)]
 
 
 def main():
@@ -42,24 +41,17 @@ def rec(x, y):
                 return 1
         return 1 if len(x) < len(y) else (0 if len(x) == len(y) else -1)
     elif type(x) == type([]) and type(y) == type(5):
-        y = [y]
-        return rec(x, y)
+        return rec(x, [y])
     elif type(x) == type(5) and type(y) == type([]):
-        x = [x]
-        return rec(x, y)
+        return rec([x], y)
     elif type(x) == type(5) and type(y) == type(5):
         return 1 if x < y else (0 if x == y else -1)
-
-
-def inright(x, y):
-    res = rec(x, y)
-    return res == 1
 
 
 def part1(inp):
     res = 0
     for i, (a, b) in enumerate(inp):
-        if inright(a, b):
+        if rec(a, b) == 1:
             res += i + 1
     return res
 
