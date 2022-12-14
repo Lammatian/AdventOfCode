@@ -31,20 +31,20 @@ def main():
 
 
 def dropped(board, maxy):
-    x, y = 100, 0
+    x, y = 500, 0
     while y < maxy:
-        if board[y+1][x] == '.':
+        if (x, y+1) not in board:
             y += 1
-        elif board[y+1][x] in 'o#':
-            if board[y+1][x-1] == '.':
+        else:
+            if (x-1,y+1) not in board:
                 x -= 1
                 y += 1
-            elif board[y+1][x+1] == '.':
+            elif (x+1,y+1) not in board:
                 x += 1
                 y += 1
             else:
                 return (x, y)
-    return None
+    return (x, y)
 
 
 def part1(inp):
@@ -52,22 +52,22 @@ def part1(inp):
     for row in inp:
         for x, y in row:
             maxy = max(maxy, y)
-    board = [['.' for _ in range(200)] for _ in range(maxy+1)]
+    board = set()
     for row in inp:
         for (xs, ys), (xe, ye) in zip(row, row[1:]):
             if xs == xe:
                 for y in range(min(ys,ye), max(ye,ys)+1):
-                    board[y][xs - 400] = '#'
+                    board.add((xs, y))
             else:
                 for x in range(min(xs,xe), max(xs,xe)+1):
-                    board[ys][x - 400] = '#'
+                    board.add((x, ys))
 
     count = 0
     while True:
-        d = dropped(board, maxy)
-        if d is None:
+        x, y = dropped(board, maxy)
+        if y == maxy:
             break
-        board[d[1]][d[0]] = 'o'
+        board.add((x, y))
         count += 1
     return count
 
@@ -78,28 +78,24 @@ def part2(inp):
     for row in inp:
         for x, y in row:
             maxy = max(maxy, y)
-    maxy += 2
-    board = [['.' for _ in range(800)] for _ in range(maxy+1)]
-    board[maxy] = list('#' * 800)
+    maxy += 1
+    board = set()
     for row in inp:
         for (xs, ys), (xe, ye) in zip(row, row[1:]):
             if xs == xe:
                 for y in range(min(ys,ye), max(ye,ys)+1):
-                    board[y][xs - 400] = '#'
+                    board.add((xs, y))
             else:
                 for x in range(min(xs,xe), max(xs,xe)+1):
-                    board[ys][x - 400] = '#'
+                    board.add((x, ys))
 
     count = 0
     while True:
         d = dropped(board, maxy)
-        if d is None:
-            print('Error')
-            return
-        if d == (100, 0):
+        if d == (500, 0):
             count += 1
             break
-        board[d[1]][d[0]] = 'o'
+        board.add(d)
         count += 1
     return count
 
