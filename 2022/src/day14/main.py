@@ -9,25 +9,32 @@ from pyutils import *
 from copy import deepcopy
 
 
-def parse(line):
-    positions = line.split(' -> ')
-    positions = list(map(lambda x: list(map(int, x.split(','))), positions))
-    return positions
-
-
 def main():
     if len(sys.argv) > 1:
         filepath = f'{dir_path}/../../inputs/day14/' + sys.argv[1]
     else:
         filepath = f'{dir_path}/../../inputs/day14/input'
 
+    board = set()
     with open(filepath) as f:
-        inp = list(map(lambda x: parse(x), f.read().strip().split('\n')))
-
-    print(inp)
-
-    print(part1(deepcopy(inp)))
-    print(part2(deepcopy(inp)))
+        for line in f.read().strip().split('\n'):
+            px = None
+            py = None
+            for xy in line.split(' -> '):
+                x, y = xy.split(',')
+                x = int(x)
+                y = int(y)
+                if px and py:
+                    if x == px:
+                        for y_ in range(min(y, py), max(y, py)+1):
+                            board.add((x, y_))
+                    else:
+                        for x_ in range(min(x, px), max(x, px)+1):
+                            board.add((x_, y))
+                px, py = x, y
+    print(board)
+    print(part1(deepcopy(board)))
+    print(part2(deepcopy(board)))
 
 
 def dropped(board, maxy):
@@ -47,21 +54,8 @@ def dropped(board, maxy):
     return (x, y)
 
 
-def part1(inp):
-    maxy = 0
-    for row in inp:
-        for x, y in row:
-            maxy = max(maxy, y)
-    board = set()
-    for row in inp:
-        for (xs, ys), (xe, ye) in zip(row, row[1:]):
-            if xs == xe:
-                for y in range(min(ys,ye), max(ye,ys)+1):
-                    board.add((xs, y))
-            else:
-                for x in range(min(xs,xe), max(xs,xe)+1):
-                    board.add((x, ys))
-
+def part1(board):
+    maxy = max(y for _, y in board)
     count = 0
     while True:
         x, y = dropped(board, maxy)
@@ -72,22 +66,8 @@ def part1(inp):
     return count
 
 
-
-def part2(inp):
-    maxy = 0
-    for row in inp:
-        for x, y in row:
-            maxy = max(maxy, y)
-    maxy += 1
-    board = set()
-    for row in inp:
-        for (xs, ys), (xe, ye) in zip(row, row[1:]):
-            if xs == xe:
-                for y in range(min(ys,ye), max(ye,ys)+1):
-                    board.add((xs, y))
-            else:
-                for x in range(min(xs,xe), max(xs,xe)+1):
-                    board.add((x, ys))
+def part2(board):
+    maxy = max(y for _, y in board) + 1
 
     count = 0
     while True:
