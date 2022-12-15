@@ -39,10 +39,11 @@ def part1(inp):
     tr = 2000000
     positions = set()
     for (sr, sc), (br, bc) in inp:
-        D = abs(sr - br) + abs(sc - bc)
+        db = abs(sr - br) + abs(sc - bc)
         # Find all positions where cannot exist in ty = 2000000
-        dc = D - abs(tr - sr)
+        dc = db - abs(tr - sr)
         if dc < 0:
+            # any c is possible for this sensor
             continue
         for c in range(sc - dc, sc + dc + 1):
             positions.add(c)
@@ -54,21 +55,24 @@ def part1(inp):
 
 def part2(inp):
     max_ = 4000000
-    DB = []
-    for (sr, sc), (br, bc) in inp:
-        db = abs(sr - br) + abs(sc - bc)
-        DB.append(db)
     for r in range(max_):
+        # For each row
         c = 0
         while c < max_:
+            # For each column
             for (sr, sc), (br, bc) in inp:
+                # For each sensor
+                # Get distance of beacon and (r, c) from that sensor
                 db = abs(sr - br) + abs(sc - bc)
                 dc = abs(r - sr) + abs(c - sc)
                 if dc <= db:
+                    # (r, c) is closer than beacon, move to first position that's further
                     c = db - abs(r - sr) + sc + 1
+                    # check all sensors again with new value of c
                     break
             else:
                 return max_ * c + r
+        # Reached c >= max_, so r += 1
 
 
 if __name__ == '__main__':
