@@ -7,6 +7,7 @@ from collections import Counter, defaultdict
 import numpy as np
 from pyutils import *
 from copy import deepcopy
+from z3 import Int, solve, Or, Solver
 
 
 def parse(line):
@@ -53,7 +54,49 @@ def part1(inp):
     return len(positions)
 
 
-def part2(inp):
+def part2_z3(inp):
+    max_ = 4000000
+    r = Int('r')
+    c = Int('c')
+    eqs = []
+    for (sr, sc), (br, bc) in inp:
+        db = abs(sr - br) + abs(sc - bc)
+        eq = []
+        for dr, dc in [(1,1),(-1,1),(1,-1),(-1,-1)]:
+            eq.append(dr * (r - sr) + dc * (c - sc) > db)
+        eqs.append(Or(*eq))
+    eqs.append(r > 0)
+    eqs.append(r < max_)
+    eqs.append(c > 0)
+    eqs.append(c < max_)
+    res = Int('result')
+    eqs.append(res == max_ * c + r)
+    solve(*eqs)
+
+
+def part2_border(inp):
+    # Idea: go around the border of each 'diamond' as the solution has to be on the border
+    mul = 4000000
+    bound = 4000000
+    for (sr,sc),(br,bc) in inp:
+        db = abs(sr - br) + abs(sc - bc)
+        r, c = sr, sc - db - 1
+        for dr, dc in [(1,1),(-1,1),(-1,-1),(1,-1)]:
+            for _ in range(db + 1):
+                r += dr
+                c += dc
+                if r < 0 or r >= bound or c < 0 or c >= bound:
+                    continue
+                for (sr_,sc_),(br_,bc_) in inp:
+                    db_ = abs(sr_ - br_) + abs(sc_ - bc_)
+                    d_ = abs(r - sr_) + abs(c - sc_)
+                    if d_ <= db_:
+                        break
+                else:
+                    return mul * c + r
+
+
+def part2_iter(inp):
     max_ = 4000000
     for r in range(max_):
         # For each row
@@ -73,6 +116,10 @@ def part2(inp):
             else:
                 return max_ * c + r
         # Reached c >= max_, so r += 1
+
+
+def part2(inp):
+    return part2_border(inp)
 
 
 if __name__ == '__main__':
