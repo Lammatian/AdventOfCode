@@ -25,7 +25,6 @@ def main():
     print(inp)
 
     print(part1(deepcopy(inp)))
-    print(part1_(deepcopy(inp)))
     print(part2(deepcopy(inp)))
 
 
@@ -44,21 +43,26 @@ def can_move(board, shape, leftmost, botmost):
             return False 
         if botmost + r < 0:
             continue
-        if leftmost + c >= 7:
-            return False
-        if leftmost + c < 0:
+        if not(0 <= leftmost + c < 7):
             return False
         if board[botmost + r][leftmost + c] == '#':
             return False
     return True
 
 
-def update_(board, shape, leftmost, botmost):
+def update(board, shape, leftmost, botmost):
     for r, c in shape:
         board[botmost + r][leftmost + c] = '#'
 
 
-def part1_(inp):
+def highest(board):
+    for r, row in enumerate(board):
+        if '#' in row:
+            return r
+    return len(board)
+
+
+def part1(inp):
     global shapes
     board = [['.' for _ in range(7)] for _ in range(4)]
     names = ['minus', 'plus', 'l', 'I', 'square']
@@ -79,7 +83,7 @@ def part1_(inp):
             else:
                 break
 
-        update_(board, shape, leftmost, botmost)
+        update(board, shape, leftmost, botmost)
         h = highest(board)
         if h < 4:
             board = [['.' for _ in range(7)] for _ in range(4 - h)] + board
@@ -87,177 +91,56 @@ def part1_(inp):
     return len(board) - highest(board)
 
 
-def touching(board, bottom, leftmost, botmost):
-    for r, c in bottom:
-        if botmost + r + 1 >= len(board):
-            return True
-        if botmost + r < 0:
-            continue
-        if board[botmost + r + 1][leftmost + c] == '#':
-            return True
-    return False
-
-
-def right(board, right, leftmost, botmost):
-    for r, c in right:
-        if leftmost + c + 1 >= 7:
-            return 0
-        if botmost + r < 0:
-            continue
-        if board[botmost + r][leftmost + c + 1] == '#':
-            return 0
-    return 1
-
-
-def left(board, left, leftmost, botmost):
-    for r, c in left:
-        if botmost + r < 0:
-            continue
-        if leftmost + c - 1 < 0:
-            return 0
-        if board[botmost + r][leftmost + c - 1] == '#':
-            return 0
-    return 1
-
-
-def update(board, ss, leftmost, botmost):
-    for r, c in ss:
-        board[botmost + r][leftmost + c] = '#'
-
-
-def highest(board):
-    for r, row in enumerate(board):
-        if '#' in row:
-            return r
-    return len(board)
-
-
-def part1(inp):
-    board = [['.' for _ in range(7)] for _ in range(4)]
-
-    names = ['minus', 'plus', 'l', 'I', 'square']
-
-    ss = { # row, col
-        'minus': [(0, 0), (0, 1), (0, 2), (0, 3)],
-        'plus': [(-1, 0), (0, 1), (-1, 1), (-1, 2), (-2, 1)],
-        'l': [(0, 0), (0, 1), (0, 2), (-1, 2), (-2, 2)],
-        'I': [(0, 0), (-1, 0), (-2, 0), (-3, 0)],
-        'square': [(0, 0), (0, 1), (-1, 0), (-1, 1)]
-    }
-
-    bottom = { # row, col
-        'minus': [(0, 0), (0, 1), (0, 2), (0, 3)],
-        'plus': [(-1, 0), (0, 1), (-1, 2)],
-        'l': [(0, 0), (0, 1), (0, 2)],
-        'I': [(0, 0)],
-        'square': [(0, 0), (0, 1)]
-    }
-    rights = { # row, col
-        'minus': [(0, 3)],
-        'plus': [(-2, 1), (-1, 2), (0, 1)],
-        'l': [(0, 2), (-1, 2), (-2, 2)],
-        'I': [(0, 0), (-1, 0), (-2, 0), (-3, 0)],
-        'square': [(0, 1), (-1, 1)]
-    }
-    lefts = { # row, col
-        'minus': [(0, 0)],
-        'plus': [(-2, 1), (-1, 0), (0, 1)],
-        'l': [(0, 0), (-1, 2), (-2, 2)],
-        'I': [(0, 0), (-1, 0), (-2, 0), (-3, 0)],
-        'square': [(0, 0), (-1, 0)]
-    }
-
-    nm = 0
-    for t in range(2022):
-        name = names[t % 5]
-        leftmost = 2
-        botmost = 0
-        while True:
-            if inp[nm] == '>':
-                leftmost += right(board, rights[name], leftmost, botmost)
-            elif inp[nm] == '<':
-                leftmost -= left(board, lefts[name], leftmost, botmost)
-            nm = (nm + 1) % len(inp)
-            if touching(board, bottom[name], leftmost, botmost):
-                break
-            botmost += 1
-        update(board, ss[name], leftmost, botmost)
-        h = highest(board)
-        if h < 4:
-            board = [['.' for _ in range(7)] for _ in range(4 - h)] + board
-
-    return len(board) - highest(board)
+def top_rows(board):
+    rows = ''
+    # Just randomly take top 6 filled rows as a signature
+    for row in board[4:10]:
+        rows += ''.join(row)
+    return rows
 
 
 def part2(inp):
+    global shapes
     board = [['.' for _ in range(7)] for _ in range(4)]
-
     names = ['minus', 'plus', 'l', 'I', 'square']
-
-    ss = { # row, col
-        'minus': [(0, 0), (0, 1), (0, 2), (0, 3)],
-        'plus': [(-1, 0), (0, 1), (-1, 1), (-1, 2), (-2, 1)],
-        'l': [(0, 0), (0, 1), (0, 2), (-1, 2), (-2, 2)],
-        'I': [(0, 0), (-1, 0), (-2, 0), (-3, 0)],
-        'square': [(0, 0), (0, 1), (-1, 0), (-1, 1)]
-    }
-
-    bottom = { # row, col
-        'minus': [(0, 0), (0, 1), (0, 2), (0, 3)],
-        'plus': [(-1, 0), (0, 1), (-1, 2)],
-        'l': [(0, 0), (0, 1), (0, 2)],
-        'I': [(0, 0)],
-        'square': [(0, 0), (0, 1)]
-    }
-    rights = { # row, col
-        'minus': [(0, 3)],
-        'plus': [(-2, 1), (-1, 2), (0, 1)],
-        'l': [(0, 2), (-1, 2), (-2, 2)],
-        'I': [(0, 0), (-1, 0), (-2, 0), (-3, 0)],
-        'square': [(0, 1), (-1, 1)]
-    }
-    lefts = { # row, col
-        'minus': [(0, 0)],
-        'plus': [(-2, 1), (-1, 0), (0, 1)],
-        'l': [(0, 0), (-1, 2), (-2, 2)],
-        'I': [(0, 0), (-1, 0), (-2, 0), (-3, 0)],
-        'square': [(0, 0), (-1, 0)]
-    }
     M = 1000000000000
-
-    nm = 0
-    seen = {} # (pattern, nm, name) -> move
+    nextmove = 0
+    seen = {} # (pattern, nextmove, name) -> time
     heights = {}
-    for t in range(2022):
+
+    t = 0
+    while True:
         name = names[t % 5]
         leftmost = 2
         botmost = 0
-
+        shape = shapes[name]
         heights[t] = len(board) - highest(board)
-        rows = ''
-        for row in board[4:10]:
-            rows += str(row)
-        if (rows, nm, name) in seen:
-            tseen = seen[(rows, nm, name)]
+        rows = top_rows(board)
+        if (rows, nextmove, name) in seen:
+            tseen = seen[(rows, nextmove, name)]
             repeat = t - tseen
             hrepeat = heights[t] - heights[tseen]
+            # This works and if I think hard enough about it also seems to makes sense
+            # Essentially: for each full repeat add its height and then add the remainder
             return ((M - tseen) // repeat) * hrepeat + heights[tseen + ((M - tseen) % repeat)]
-        seen[(rows, nm, name)] = t
+        seen[(rows, nextmove, name)] = t
 
         while True:
-            if inp[nm] == '>':
-                leftmost += right(board, rights[name], leftmost, botmost)
-            elif inp[nm] == '<':
-                leftmost -= left(board, lefts[name], leftmost, botmost)
-            nm = (nm + 1) % len(inp)
-            if touching(board, bottom[name], leftmost, botmost):
+            potential_leftmost = leftmost + (1 if inp[nextmove] == '>' else -1)
+            if can_move(board, shape, potential_leftmost, botmost):
+                leftmost = potential_leftmost
+            nextmove = (nextmove + 1) % len(inp)
+            if can_move(board, shape, leftmost, botmost + 1):
+                botmost += 1
+            else:
                 break
-            botmost += 1
 
-        update(board, ss[name], leftmost, botmost)
+        update(board, shape, leftmost, botmost)
         h = highest(board)
         if h < 4:
             board = [['.' for _ in range(7)] for _ in range(4 - h)] + board
+
+        t += 1
 
 
 if __name__ == '__main__':
