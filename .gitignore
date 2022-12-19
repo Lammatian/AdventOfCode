@@ -28,6 +28,7 @@ input**.txt
 *.swp
 *.swo
 **/inputs/
+**/build/
 **/__pycache__/
 *.py[cod]
 *$py.class
