@@ -66,8 +66,14 @@ def part2(inp):
             s1 = op[0]
             s2 = op[2]
 
-    # The MBS - manual binary search :D
-    for t in range(int(3.555057453*10**12), int(3.5550575*10**12)):
+    # Binary search with manually picked values for min_/max_
+    # I believe there are actually multiple right answers here
+    # And depending on the max_/min_ and the strategy for setting them,
+    # you can get different results +-4 which all seem to work
+    max_ = 10**14
+    min_ = 0
+    while max_ > min_:
+        t = (max_ + min_) // 2
         vals['humn'] = t
         V = deepcopy(vals)
         while not (s1 in V and s2 in V):
@@ -88,7 +94,12 @@ def part2(inp):
         if V[s1] == V[s2]:
             return t
         else:
-            print(s1, s2, V[s1], V[s2], V[s1] - V[s2])
+            if V[s1] - V[s2] > 0:
+                min_ = t + 1
+            else:
+                max_ = t - 1
+
+    return None
 
 
 if __name__ == '__main__':
