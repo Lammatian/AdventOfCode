@@ -7,6 +7,7 @@ from collections import Counter, defaultdict
 import numpy as np
 from pyutils import *
 from copy import deepcopy
+from z3 import Solver, sat, Real
 
 
 def parse(line):
@@ -26,7 +27,8 @@ def main():
     print(inp)
 
     print(part1(deepcopy(inp)))
-    print(part2(deepcopy(inp)))
+    print(part2_z3(deepcopy(inp)))
+    print(part2_binsearch(deepcopy(inp)))
 
 
 def part1(inp):
@@ -54,7 +56,42 @@ def part1(inp):
     return vals['root']
 
 
-def part2(inp):
+def part2_z3(inp):
+    s = Solver()
+    for r, op in inp:
+        if r == 'humn':
+            # We're solving for humn
+            continue
+        elif len(op) == 1:
+            v = Real(r)
+            s.add(v == int(op[0]))
+        elif r == 'root':
+            v1 = Real(op[0])
+            v2 = Real(op[2])
+            s.add(v1 == v2)
+        else:
+            v1 = Real(op[0])
+            v2 = Real(op[2])
+            vr = Real(r)
+            if op[1] == '+':
+                s.add(vr == v1 + v2)
+            if op[1] == '-':
+                s.add(vr == v1 - v2)
+            if op[1] == '*':
+                s.add(vr == v1 * v2)
+            if op[1] == '/':
+                s.add(vr == v1 / v2)
+
+    if s.check() == sat:
+        m = s.model()
+        for d in m:
+            if str(d) == 'humn':
+                return m[d]
+    else:
+        return -1
+
+
+def part2_binsearch(inp):
     vals = {}
     s1, s2 = None, None
     for r, op in inp:
@@ -67,10 +104,9 @@ def part2(inp):
             s2 = op[2]
 
     # Binary search with manually picked values for min_/max_
-    # I believe there are actually multiple right answers here
-    # And depending on the max_/min_ and the strategy for setting them,
-    # you can get different results +-4 which all seem to work
-    max_ = 10**14
+    # Floor division fucks this solution up a bit so it returns a value
+    # off by 1 if max_/min_ are not set right 💁
+    max_ = 3 * 10**13
     min_ = 0
     while max_ > min_:
         t = (max_ + min_) // 2
