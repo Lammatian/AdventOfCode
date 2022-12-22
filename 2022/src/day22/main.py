@@ -89,11 +89,9 @@ def part1(board, moves):
     d = 0
     T = {'L': -1, 'R': 1}
     W = {0: wrapleft, 1: wraptop, 2: wrapright, 3: wrapbot}
-    V = {0: '>', 1: 'v', 2: '<', 3: '^'}
     path = []
     for m in moves: 
         if isinstance(m, str):
-            #print('turning', t, 'direction', d, D[d])
             d = (d + T[m]) % len(D)
             continue
 
@@ -101,7 +99,6 @@ def part1(board, moves):
         i = 0
         while i < m:
             path.append((r, c, d))
-            print(r, c)
             rr = r + dr
             cc = c + dc
             if (rr, cc) in O:
@@ -110,55 +107,201 @@ def part1(board, moves):
                 rr, cc = W[d](board, rr, cc)
             if (rr, cc) in O:
                 break
-            #if rr < 0 or cc < 0 or rr >= len(board) or cc >= len(board[rr]) or board[rr][cc] == ' ':
-            #    rr, cc = W[d](board, rr, cc)
-            #if board[rr][cc] == '#':
-            #    break
             r = rr
             c = cc
             i += 1
         path.append((r, c, d))
-        print(r, c)
-
-        #toprint = []
-        #for R, row in enumerate(board):
-        #    if r == R:
-        #        toprint.append(''.join(row[:c] + 'X' + row[c+1:]))
-        #    else:
-        #        toprint.append(''.join(row))
-        #for pr, pc, pd in path:
-        #    if (pr, pc) == (r, c):
-        #        continue
-        #    toprint[pr] = list(toprint[pr])
-        #    toprint[pr][pc] = V[pd]
-        #    toprint[pr] = ''.join(toprint[pr])
-        #for row in toprint:
-        #    print(row)
-        #print()
-    print(moves[:100])
-    toprint = []
-    for R, row in enumerate(board):
-        if r == R:
-            toprint.append(''.join(row[:c] + 'X' + row[c+1:]))
-        else:
-            toprint.append(''.join(row))
-    for pr, pc, pd in path:
-        if (pr, pc) == (r, c):
-            continue
-        toprint[pr] = list(toprint[pr])
-        toprint[pr][pc] = V[pd]
-        toprint[pr] = ''.join(toprint[pr])
-    for row in toprint:
-        print(row)
-    print()
-
-    print(r, c)
 
     return 1000 * (r + 1) + 4 * (c + 1) + d
 
 
+# Actual input
+# For each face and each direction stores (next face, edge of that face, if coords need inversion)
+# Inversion here means moving from e.g. row 1 to row 48 on the other face because of how they're connected
+transitions = {
+    1: {
+        0: (2, 'L', False),
+        1: (3, 'T', False),
+        2: (4, 'L', True),
+        3: (6, 'L', False)
+    },
+    2: {
+        0: (5, 'R', True),
+        1: (3, 'R', False),
+        2: (1, 'R', False),
+        3: (6, 'B', False)
+    },
+    3: {
+        0: (2, 'B', False),
+        1: (5, 'T', False),
+        2: (4, 'T', False),
+        3: (1, 'B', False)
+    },
+    4: {
+        0: (5, 'L', False),
+        1: (6, 'T', False),
+        2: (1, 'L', True),
+        3: (3, 'L', False)
+    },
+    5: {
+        0: (2, 'R', True),
+        1: (6, 'R', False),
+        2: (4, 'R', False),
+        3: (3, 'B', False)
+    },
+    6: {
+        0: (5, 'B', False),
+        1: (2, 'T', False),
+        2: (1, 'T', False),
+        3: (4, 'B', False)
+    }
+}
+side_to_d = {
+    'L': 0,
+    'T': 1,
+    'R': 2,
+    'B': 3
+}
+d_to_side = {
+    0: 'L',
+    1: 'T',
+    2: 'R',
+    3: 'B'
+}
+D = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+SZ = 50
+T = {'L': -1, 'R': 1}
+# Top-left corner of each face
+face_to_board = {
+    1: [0, SZ],
+    2: [0, 2*SZ],
+    3: [SZ, SZ],
+    4: [2*SZ, 0],
+    5: [2*SZ, SZ],
+    6: [3*SZ, 0],
+}
+
+# Example input
+transitions_ = {
+    1: {
+        0: (6, 'R', True),
+        1: (4, 'T', False),
+        2: (3, 'T', False),
+        3: (2, 'T', True)
+    },
+    2: {
+        0: (3, 'L', False),
+        1: (5, 'B', True),
+        2: (6, 'B', True),
+        3: (1, 'T', True)
+    },
+    3: {
+        0: (4, 'L', False),
+        1: (5, 'L', True),
+        2: (2, 'R', False),
+        3: (1, 'L', False)
+    },
+    4: {
+        0: (6, 'T', True),
+        1: (5, 'T', False),
+        2: (3, 'R', False),
+        3: (1, 'B', False)
+    },
+    5: {
+        0: (6, 'L', False),
+        1: (2, 'B', True),
+        2: (3, 'B', True),
+        3: (4, 'B', False)
+    },
+    6: {
+        0: (1, 'R', True),
+        1: (2, 'R', True),
+        2: (5, 'R', False),
+        3: (4, 'R', True)
+    }
+}
+SZ_ = 4
+DMAP_ = {
+    1: [0, 2*SZ],
+    2: [SZ, 0],
+    3: [SZ, SZ],
+    4: [SZ, 2*SZ],
+    5: [2*SZ, 2*SZ],
+    6: [2*SZ, 3*SZ]
+}
+
+
+def need_swap(from_side, to_side):
+    # If we need to swap row with column
+    # This is true only if we move from top/bot to left/right or vice-verse
+    return (from_side in 'LR') != (to_side in 'LR')
+
+
+def wrap_face(f, r, c, d):
+    old_side = d_to_side[d]
+    new_f, new_side, inv = transitions[f][d]
+    new_d = side_to_d[new_side]
+    ns = need_swap(old_side, new_side)
+    if new_side == 'R':
+        new_r = c if ns else r
+        if inv:
+            new_r = SZ - new_r - 1
+        new_c = SZ - 1
+    elif new_side == 'L':
+        new_r = c if ns else r
+        if inv:
+            new_r = SZ - new_r - 1
+        new_c = 0
+    elif new_side == 'B':
+        new_r = SZ - 1
+        new_c = r if ns else c
+        if inv:
+            new_c = SZ - new_c - 1
+    elif new_side == 'T':
+        new_r = 0
+        new_c = r if ns else c
+        if inv:
+            new_c = SZ - new_c - 1
+    else:
+        assert False
+
+    return new_f, new_r, new_c, new_d 
+
+
+def to_board(f, r, c):
+    br, bc = face_to_board[f]
+    return br + r, bc + c
+    
+
 def part2(board, moves):
-    pass
+    # Start on face 1, at (0, 0), facing right
+    f, r, c, d = 1, 0, 0, 0
+    path = []
+    for m in moves: 
+        if isinstance(m, str):
+            d = (d + T[m]) % len(D)
+            continue
+
+        for _ in range(m):
+            path.append((*to_board(f, r, c), d))
+            dr, dc = D[d]
+            rr = r + dr
+            cc = c + dc
+            dd = d
+            ff = f
+            if rr not in range(SZ) or cc not in range(SZ):
+                ff, rr, cc, dd = wrap_face(f, rr, cc, d)
+
+            br, bc = to_board(ff, rr, cc)
+            if board[br][bc] == '#':
+                break
+
+            d, f, r, c = dd, ff, rr, cc
+        else:
+            path.append((*to_board(f, r, c), d))
+
+    br, bc = to_board(f, r, c)
+    return 1000 * (br + 1) + 4 * (bc + 1) + d
 
 
 if __name__ == '__main__':
