@@ -8,17 +8,18 @@ onlyDigits = map digitToInt . filter isDigit
 onlyDigitsSpelled :: String -> [Int]
 onlyDigitsSpelled [] = []
 onlyDigitsSpelled (x:xs)
-  | isDigit x                   = digitToInt x : onlyDigitsSpelled xs
-  | isPrefixOf "one" (x:xs)     = 1 : onlyDigitsSpelled xs
-  | isPrefixOf "two" (x:xs)     = 2 : onlyDigitsSpelled xs
-  | isPrefixOf "three" (x:xs)   = 3 : onlyDigitsSpelled xs
-  | isPrefixOf "four" (x:xs)    = 4 : onlyDigitsSpelled xs
-  | isPrefixOf "five" (x:xs)    = 5 : onlyDigitsSpelled xs
-  | isPrefixOf "six" (x:xs)     = 6 : onlyDigitsSpelled xs
-  | isPrefixOf "seven" (x:xs)   = 7 : onlyDigitsSpelled xs
-  | isPrefixOf "eight" (x:xs)   = 8 : onlyDigitsSpelled xs
-  | isPrefixOf "nine" (x:xs)    = 9 : onlyDigitsSpelled xs
-  | otherwise                   = onlyDigitsSpelled xs
+  | isDigit x               = digitToInt x : onlyDigitsSpelled xs
+  | "one" `isPrefixOf` s    = 1 : onlyDigitsSpelled xs
+  | "two" `isPrefixOf` s    = 2 : onlyDigitsSpelled xs
+  | "three" `isPrefixOf` s  = 3 : onlyDigitsSpelled xs
+  | "four" `isPrefixOf` s   = 4 : onlyDigitsSpelled xs
+  | "five" `isPrefixOf` s   = 5 : onlyDigitsSpelled xs
+  | "six" `isPrefixOf` s    = 6 : onlyDigitsSpelled xs
+  | "seven" `isPrefixOf` s  = 7 : onlyDigitsSpelled xs
+  | "eight" `isPrefixOf` s  = 8 : onlyDigitsSpelled xs
+  | "nine" `isPrefixOf` s   = 9 : onlyDigitsSpelled xs
+  | otherwise               = onlyDigitsSpelled xs
+  where s = x:xs
 
 firstLast :: NonEmpty Int -> Int
 firstLast x = 10 * NE.head x + NE.last x
@@ -29,7 +30,7 @@ convertArt digitExtractor = firstLast . NE.fromList . digitExtractor
 main :: IO()
 main = 
   do
-    content <- readFile ("input.txt")
+    content <- readFile "input.txt"
     let contentLines = lines content
     print $ sum $ map (convertArt onlyDigits) contentLines
     print $ sum $ map (convertArt onlyDigitsSpelled) contentLines
