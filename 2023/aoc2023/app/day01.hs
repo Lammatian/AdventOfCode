@@ -30,7 +30,7 @@ convertArt digitExtractor = firstLast . NE.fromList . digitExtractor
 main :: IO()
 main = 
   do
-    content <- readFile "input.txt"
+    content <- readFile "inputs/day01/input.txt"
     let contentLines = lines content
     print $ sum $ map (convertArt onlyDigits) contentLines
     print $ sum $ map (convertArt onlyDigitsSpelled) contentLines
