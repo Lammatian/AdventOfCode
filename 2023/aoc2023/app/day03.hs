@@ -42,21 +42,22 @@ updateGear (Just x) _ = Just x
 updateGear Nothing (Just x) = Just x
 updateGear _ _ = Nothing
 
--- Let's assume each number is adjacent only to one symbol and hope for the best
-rowGearRatios :: Int -> Int -> Row -> Row -> Row -> CurrentNumber -> Maybe (Int, Int) -> Map (Int, Int) [Int] -> Map (Int, Int) [Int]
-rowGearRatios row col (a:as) (b1:b2:b3:bs) (c:cs) curr gear m
-  | isDigit b2 = rowGearRatios row nextCol as (b2:b3:bs) cs (10 * curr + digitToInt b2) (updateGear gear newGear) m
-  | curr > 0 = rowGearRatios row nextCol as (b2:b3:bs) cs 0 Nothing updateGearMap
-  | otherwise = rowGearRatios row nextCol as (b2:b3:bs) cs 0 Nothing m
+-- Let's assume each number is adjacent only to one gear and hope for the best
+-- Returns the map with gear (x, y) coordinates as key and list of parts as value
+partsNextToGears :: Int -> Int -> Row -> Row -> Row -> CurrentNumber -> Maybe (Int, Int) -> Map (Int, Int) [Int] -> Map (Int, Int) [Int]
+partsNextToGears row col (a:as) (b1:b2:b3:bs) (c:cs) curr gear m
+  | isDigit b2 = partsNextToGears row nextCol as (b2:b3:bs) cs (10 * curr + digitToInt b2) (updateGear gear newGear) m
+  | curr > 0 = partsNextToGears row nextCol as (b2:b3:bs) cs 0 Nothing updateGearMap
+  | otherwise = partsNextToGears row nextCol as (b2:b3:bs) cs 0 Nothing m
   where
     nextCol = col + 1
     newGear = findGear row col (take 3 (a:as)) [b1, b2, b3] (take 3 (c:cs))
     updateGearMap = if isJust gear then insertWith (++) (fromJust gear) [curr] m else m
-rowGearRatios _ _ _ _ _ curr (Just (x, y)) m = insertWith (++) (x, y) [curr] m
-rowGearRatios _ _ _ _ _ _ _ m = m
+partsNextToGears _ _ _ _ _ curr (Just (x, y)) m = insertWith (++) (x, y) [curr] m
+partsNextToGears _ _ _ _ _ _ _ m = m
 
-rowGearRatioNum :: Map (Int, Int) [Int] -> Int
-rowGearRatioNum m = sum $ DM.map (\[x, y] -> x * y) $ DM.filter (\x -> length x == 2) m
+rowGearRatio :: Map (Int, Int) [Int] -> Int
+rowGearRatio m = sum $ DM.map (\[x, y] -> x * y) $ DM.filter (\x -> length x == 2) m
 
 main :: IO()
 main =
@@ -70,4 +71,4 @@ main =
     let wrappedRows = [concat (replicate rowLength ".")] ++ rows ++ [concat (replicate rowLength ".")]
     let zippedWrappedRows = zip (zip wrappedRows (tail wrappedRows)) (drop 2 wrappedRows)
     print $ sum $ Prelude.map (\((a, b), c) -> rowPartNumbers a b c 0 0 False) zippedWrappedRows
-    print $ rowGearRatioNum $ foldr (\(((a, b), c), r) m -> rowGearRatios r 1 a b c 0 Nothing m) empty $ zip zippedWrappedRows [1..]
+    print $ rowGearRatio $ foldr (\(((a, b), c), r) m -> partsNextToGears r 1 a b c 0 Nothing m) empty $ zip zippedWrappedRows [1..]
