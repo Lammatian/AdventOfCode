@@ -34,10 +34,10 @@ isStrictEnd _ = False
 isRelaxedEnd :: Location -> Bool
 isRelaxedEnd = (== 'Z') . last
 
-followInstructions :: CList Direction -> Location -> (Location -> Bool) -> Instructions -> Int
-followInstructions ds loc isEnd is
+followInstructions :: Instructions -> CList Direction -> Location -> (Location -> Bool) -> Int
+followInstructions is ds loc isEnd
   | isEnd loc = 0
-  | otherwise  = 1 + followInstructions (rotR ds) nextLoc isEnd is
+  | otherwise  = 1 + followInstructions is (rotR ds) nextLoc isEnd
   where
     d = case focus ds of
       Just x -> x
@@ -54,7 +54,7 @@ main =
     contents <- readFile $ if not (null args) then head args else "inputs/day08/input.txt"
     let directions = C.fromList $ (map (\x -> (read :: String -> Direction) [x]) . head . lines) contents
     let instructions = parseInstructions $ drop 2 $ lines contents
-    print $ followInstructions directions "AAA" isStrictEnd instructions
+    print $ followInstructions instructions directions "AAA" isStrictEnd
     let ghostStarts = filter ((== 'A') . last) $ keys instructions
-    let cycleLengths = map (\start -> followInstructions directions start isRelaxedEnd instructions) ghostStarts
+    let cycleLengths = map (\start -> followInstructions instructions directions start isRelaxedEnd) ghostStarts
     print $ nlcm $ map toInteger cycleLengths
