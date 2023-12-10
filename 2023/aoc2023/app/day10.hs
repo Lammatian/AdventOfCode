@@ -1,17 +1,16 @@
 import System.Environment (getArgs)
-import Data.Vector as V (Vector, fromList, (!), (//), length, head, tail)
+import Data.Vector as V (Vector, fromList, toList, (!), (//), length, head, tail, map, imap, imapMaybe)
 import Data.List (elemIndex)
 import Data.Maybe (fromJust)
-import Data.Set as S (Set, fromList, difference, toList)
+import Data.Set as S (Set, fromList, difference, toList, empty, union, member, size)
 
 type Grid = Vector (Vector Tile)
 data Direction = N | E | S | W deriving (Show, Eq)
-data Tile = NS | EW | NE | NW | SW | SE | Invalid | Wall | Insider | Visited deriving (Eq)
+data Tile = NS | EW | NE | NW | SW | SE | Invalid | Wall | InitialInsider | VisitedInsider deriving (Eq)
 data Point = Point {
   row :: Int,
   col :: Int
 } deriving (Show, Eq, Ord)
--- TODO: This is so unnecessary lol
 data Position = Pos {
   grid :: Grid,
   point :: Point
@@ -26,8 +25,8 @@ instance Show Tile where
   show SE = "┌"
   show Invalid = "."
   show Wall = "#"
-  show Insider = "I"
-  show Visited = "V"
+  show InitialInsider = "I"
+  show VisitedInsider = "V"
 
 -- This is awful lol
 printGrid :: Grid -> IO ()
@@ -49,6 +48,43 @@ toTile c | c == '|'  = NS
         --  | c == 'S'  = SE
          | otherwise = Invalid
 
+getStart :: [String] -> Int -> Point
+getStart [] _ = error "Start not found in the board"
+getStart (l:ls) r
+  | 'S' `elem` l = Point r (fromJust ('S' `elemIndex` l))
+  | otherwise     = getStart ls (r + 1)
+
+dirs :: Tile -> [Direction]
+dirs NS = [N, S]
+dirs EW = [E, W]
+dirs NE = [N, E]
+dirs NW = [N, W]
+dirs SW = [S, W]
+dirs SE = [S, E]
+dirs _  = []
+
+points :: Tile -> Direction -> Bool
+points t d = d `elem` dirs t
+
+isConnected :: Grid -> Point -> Direction -> Bool
+isConnected g (Point r c) N = points (g `at` Point (r - 1) c) S
+isConnected g (Point r c) E = points (g `at` Point r (c + 1)) W
+isConnected g (Point r c) S = points (g `at` Point (r + 1) c) N
+isConnected g (Point r c) W = points (g `at` Point r (c - 1)) E
+
+-- TODO: Assumes start is not on the edge
+detectStartTile :: Grid -> Point -> Tile
+detectStartTile g p = case neswConnections of
+  [True, True, _, _] -> NE
+  [True, _, True, _] -> NS
+  [True, _, _, True] -> NW
+  [_, True, True, _] -> SE
+  [_, True, _, True] -> EW
+  [_, _, True, True] -> SW
+  _                  -> error $ "Impossible bruh " ++ show neswConnections
+  where
+    neswConnections = [isConnected g p d | d <- [N, E, S, W]]
+
 at :: Grid -> Point -> Tile
 g `at` Point r c = (g ! r) ! c
 
@@ -56,12 +92,10 @@ currTile :: Position -> Tile
 currTile (Pos g p) = at g p
 
 move :: Position -> Direction -> Position
--- Why is this non-exhaustive?
-move (Pos g (Point r c)) dir
-  | dir == N = Pos g (Point (r - 1) c)
-  | dir == E = Pos g (Point r (c + 1))
-  | dir == S = Pos g (Point (r + 1) c)
-  | dir == W = Pos g (Point r (c - 1))
+move (Pos g (Point r c)) N = Pos g (Point (r - 1) c)
+move (Pos g (Point r c)) E = Pos g (Point r (c + 1))
+move (Pos g (Point r c)) S = Pos g (Point (r + 1) c)
+move (Pos g (Point r c)) W = Pos g (Point r (c - 1))
 
 next :: Position -> Direction -> (Position, Direction)
 next curr fromDirection = case (fromDirection, currTile curr) of
@@ -79,14 +113,6 @@ next curr fromDirection = case (fromDirection, currTile curr) of
   (E, SE) -> (move curr S, N)
   _       -> error $ "This shouldn't happen :( with " ++ show curr ++ " " ++ show fromDirection
 
-countLoopLength :: Position -> Direction -> Point -> Int -> Int
-countLoopLength pos fromDirection start count
-  | count /= 0 && point pos == start = count
-  -- Choice of direction in start is arbitrary
-  | otherwise                        = countLoopLength nextPos fromDir start (count + 1)
-  where
-    (nextPos, fromDir) = next pos fromDirection
-
 wallUp :: Position -> Point -> Position
 wallUp (Pos g pt) (Point r c) = Pos (g // [(r, newRow)]) pt
   where
@@ -96,8 +122,8 @@ inBounds :: Grid -> Point -> Bool
 inBounds g (Point rr cc) = rr >= 0 && rr < V.length g && cc >= 0 && cc < V.length (g ! 0)
 
 -- This actually either gets insiders or outsiders depending on the direction of travel but w/e
-getInsiders :: Position -> Direction -> [Point]
-getInsiders pos@(Pos g (Point r c)) fromDirection = case (currTile pos, fromDirection) of
+getPotentialInsiders :: Position -> Direction -> [Point]
+getPotentialInsiders pos@(Pos g (Point r c)) fromDirection = case (currTile pos, fromDirection) of
   (NS, N) -> [Point r (c - 1)]
   (NS, S) -> [Point r (c + 1)]
   (EW, E) -> [Point (r - 1) c]
@@ -110,7 +136,7 @@ getInsiders pos@(Pos g (Point r c)) fromDirection = case (currTile pos, fromDire
   (SW, W) -> []
   (SE, S) -> []
   (SE, E) -> [Point rr cc | (rr, cc) <- [(r - 1, c), (r, c - 1)], inBounds g (Point rr cc)]
-  _       -> error $ "This shouldn't happen (getInsiders) " ++ show (Point r c) ++ " " ++ show fromDirection
+  _       -> error $ "This shouldn't happen (getPotentialInsiders) " ++ show (Point r c) ++ " " ++ show fromDirection
 
 -- Return updated grid, loop and insiders
 loopAround :: Position -> [Point] -> [Point] -> Direction -> Point -> Bool -> (Position, Set Point, Set Point)
@@ -119,15 +145,9 @@ loopAround pos path insiders fromDirection start firstMove
   | otherwise                           = loopAround (wallUp nextPos curr) updatedPath updatedInsiders nextFromDir start False
   where
     updatedPath = point pos:path
-    updatedInsiders = insiders ++ getInsiders pos fromDirection
+    updatedInsiders = insiders ++ getPotentialInsiders pos fromDirection
     curr = point pos
     (nextPos, nextFromDir) = next pos fromDirection
-
-getStart :: [String] -> Int -> Point
-getStart [] _ = error "Start not found in the board"
-getStart (l:ls) r
-  | 'S' `elem` l = Point r (fromJust ('S' `elemIndex` l))
-  | otherwise     = getStart ls (r + 1)
 
 -- This is the same as wall up essentially
 mark :: Tile -> Grid -> Point -> Grid
@@ -136,50 +156,60 @@ mark t g (Point r c) = g // [(r, newRow)]
     newRow = (g ! r) // [(c, t)]
 
 updateWithInsiders :: Grid -> Set Point -> Grid
-updateWithInsiders = foldl (mark Insider)
+updateWithInsiders = foldl (mark InitialInsider)
 
 getNeighbours :: Grid -> Point -> [Point]
 getNeighbours g (Point r c) = [np | np <- [Point (r + 1) c, Point r (c + 1), Point (r - 1) c, Point r (c - 1)], inBounds g np, available g np]
   where
-    available gr p = (gr `at` p) `notElem` [Wall, Visited]
+    available gr p = (gr `at` p) `notElem` [Wall, VisitedInsider]
 
 -- We can just do a search for insiders this way guaranteed
-getAllInsiders :: Grid -> Point -> Grid
-getAllInsiders g p
+markInsidersFromPoint :: Grid -> Point -> Grid
+markInsidersFromPoint g p
   -- Already visited? Done
-  | g `at` p == Visited           = g
+  | g `at` p == VisitedInsider    = g
   -- No neighbours? Mark as visited and done
-  | null neighbours               = mark Visited g p
+  | null neighbours               = mark VisitedInsider g p
   -- Otherwise for neighbours do magic
-  | otherwise                     = foldl getAllInsiders (mark Visited g p) neighbours
+  | otherwise                     = foldl markInsidersFromPoint (mark VisitedInsider g p) neighbours
   where
     neighbours = getNeighbours g p
 
-getAllInsidersForIslands :: Grid -> [Point] -> Grid
-getAllInsidersForIslands g ins = updatedGrid
+markAllInsiders :: Grid -> [Point] -> Grid
+markAllInsiders g ins = updatedGrid
   where
-    updatedGrid = foldl getAllInsiders g ins
+    updatedGrid = foldl markInsidersFromPoint g ins
 
+getInsidersFromGrid :: Grid -> Set Point
+getInsidersFromGrid g = foldl S.union S.empty pointSets
+  where
+    insiderIndices = V.map (V.imapMaybe (\i t -> if t == VisitedInsider then Just i else Nothing)) g
+    toPointSet rowIdx colIdxs = S.fromList $ V.toList $ V.map (Point rowIdx) colIdxs
+    pointSets = V.toList $ V.imap toPointSet insiderIndices
+
+getInsiderCount :: Grid -> Set Point -> Int
+getInsiderCount g path = if Point 0 0 `member` insiders
+  then gsize - S.size insiders - S.size path
+  else S.size insiders
+  where
+    gsize = V.length g * V.length (g ! 0)
+    insiders = getInsidersFromGrid g
+
+-- TODO: Is Position type necessary?
+-- TODO: wallUp is unnecessary (mark can replace it probably)
+-- TODO: This solution assumes (0, 0) is not part of the pipe
 main :: IO ()
 main =
   do
     args <- getArgs
     contents <- readFile $ if not (null args) then Prelude.head args else "inputs/day10/input.txt"
-    let start = getStart (lines contents) 0
-    let board = V.fromList $ map (V.fromList . map toTile) $ lines contents
-    -- print $ countLoopLength (Pos board start) N start 0 `div` 2
-    let (Pos g p, pth, ins) = loopAround (Pos board start) [] [] N start True
-    printGrid g
-    print ins
-    print pth
-    print $ ins `difference` pth
+    let startPos = getStart (lines contents) 0
+    let board = V.fromList $ Prelude.map (V.fromList . Prelude.map toTile) $ lines contents
+    let startTile = detectStartTile board startPos
+    let boardNoS = mark startTile board startPos
+    let (Pos g _, pth, ins) = loopAround (Pos boardNoS startPos) [] [] (Prelude.head (dirs startTile)) startPos True
+    print $ Prelude.length (S.toList pth) `div` 2
     let initialInsiders = ins `difference` pth
     let initialInsiderGrid = updateWithInsiders g initialInsiders
-    printGrid initialInsiderGrid
-    print $ getNeighbours initialInsiderGrid (Point 1 0)
-    print $ getNeighbours initialInsiderGrid (Point 0 0)
-    printGrid $ getAllInsiders initialInsiderGrid (Point 1 0)
-    printGrid $ getAllInsidersForIslands initialInsiderGrid (S.toList initialInsiders)
-    -- let walledUpGrid = grid $ makeWall (Pos board start) W start True
-    -- print walledUpGrid
-    -- print $ getAllNonEnclosed walledUpGrid (Point 0 0)
+    let fullGrid = markAllInsiders initialInsiderGrid (S.toList initialInsiders)
+    print $ getInsiderCount fullGrid pth
