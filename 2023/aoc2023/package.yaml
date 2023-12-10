@@ -26,6 +26,7 @@ dependencies:
 - containers
 - QuickCheck
 - data-clist
+- vector
 
 ghc-options:
 - -Wall
@@ -124,6 +125,16 @@ executables:
     - aoc2023
   day09:
     main: day09.hs
+    source-dirs: app
+    other-modules: []
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - aoc2023
+  day10:
+    main: day10.hs
     source-dirs: app
     other-modules: []
     ghc-options:
