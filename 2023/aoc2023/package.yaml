@@ -27,6 +27,8 @@ dependencies:
 - QuickCheck
 - data-clist
 - vector
+- MemoTrie
+- mtl
 
 ghc-options:
 - -Wall
@@ -145,6 +147,16 @@ executables:
     - aoc2023
   day11:
     main: day11.hs
+    source-dirs: app
+    other-modules: []
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - aoc2023
+  day12:
+    main: day12.hs
     source-dirs: app
     other-modules: []
     ghc-options:
