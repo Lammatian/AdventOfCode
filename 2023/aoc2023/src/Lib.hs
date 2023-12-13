@@ -1,6 +1,10 @@
 module Lib
-    ( someFunc
+    ( printGrid
     ) where
 
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+printGrid :: [String] -> IO ()
+printGrid [] = putStrLn ""
+printGrid (s:ss) =
+  do
+    putStrLn s
+    printGrid ss
