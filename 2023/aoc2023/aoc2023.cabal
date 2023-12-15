@@ -41,6 +41,7 @@ library
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -63,6 +64,7 @@ executable aoc2023-exe
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -81,6 +83,7 @@ executable day01
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -99,6 +102,7 @@ executable day02
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -117,6 +121,7 @@ executable day03
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -135,6 +140,7 @@ executable day04
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -153,6 +159,7 @@ executable day05
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -171,6 +178,7 @@ executable day06
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -189,6 +197,7 @@ executable day07
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -207,6 +216,7 @@ executable day08
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -225,6 +235,7 @@ executable day09
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -243,6 +254,7 @@ executable day10
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -261,6 +273,7 @@ executable day11
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -279,6 +292,7 @@ executable day12
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -297,6 +311,7 @@ executable day13
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -315,6 +330,26 @@ executable day14
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
+    , split
+    , vector
+  default-language: Haskell2010
+
+executable day15
+  main-is: day15.hs
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      MemoTrie
+    , QuickCheck
+    , aoc2023
+    , base >=4.7 && <5
+    , containers
+    , data-clist
+    , hlint
+    , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
@@ -338,6 +373,7 @@ test-suite aoc2023-test
     , data-clist
     , hlint
     , mtl
+    , ordered-containers
     , split
     , vector
   default-language: Haskell2010
