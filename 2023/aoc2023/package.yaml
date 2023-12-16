@@ -196,6 +196,16 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - aoc2023
+  day16:
+    main: day16.hs
+    source-dirs: app
+    other-modules: []
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - aoc2023
   aoc2023-exe:
     main:                Main.hs
     source-dirs:         app
