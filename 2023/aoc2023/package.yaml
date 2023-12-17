@@ -30,6 +30,7 @@ dependencies:
 - MemoTrie
 - mtl
 - ordered-containers
+- pqueue
 
 ghc-options:
 - -Wall
@@ -198,6 +199,16 @@ executables:
     - aoc2023
   day16:
     main: day16.hs
+    source-dirs: app
+    other-modules: []
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - aoc2023
+  day17:
+    main: day17.hs
     source-dirs: app
     other-modules: []
     ghc-options:
