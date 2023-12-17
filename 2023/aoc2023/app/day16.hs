@@ -65,14 +65,42 @@ possibleStarts r c = top ++ right ++ bottom ++ left ++ corners
     left    = [((r', 0), E) | r' <- [1..r-1]]
     corners = [((0, 0), E), ((0, 0), S), ((0, c - 1), W), ((0, c - 1), S), ((r - 1, 0), E), ((r - 1, 0), N), ((r - 1, c - 1), W), ((r - 1, c - 1), N)]
 
+bfs :: Board -> [(Point, Direction)] -> Set (Point, Direction) -> Set Point
+bfs _ [] s = Data.Set.map fst s
+bfs b (x@(p, d):xs) s
+  | x `member` s = bfs b xs s
+  | otherwise    = bfs b newXs (x `insert` s)
+  where
+    newDs = case (b `at` p, d) of
+      ('\\', N) -> [W]
+      ('\\', E) -> [S]
+      ('\\', S) -> [E]
+      ('\\', W) -> [N]
+      ('/', N)  -> [E]
+      ('/', E)  -> [N]
+      ('/', S)  -> [W]
+      ('/', W)  -> [S]
+      ('|', E)  -> [N, S]
+      ('|', W)  -> [N, S]
+      ('-', N)  -> [E, W]
+      ('-', S)  -> [E, W]
+      _         -> [d]
+    newXs = xs ++ [(move p newD, newD) | newD <- newDs, inBounds (move p newD) b]
+
 main :: IO ()
 main =
   do
     args <- getArgs
     contents <- readFile $ if not (null args) then head args else "inputs/day16/input.txt"
     let board = lines contents
-    let test = evalState (getResult board (0, 0) E) empty
-    print $ length test
     let starts = possibleStarts (length board) (length (head board))
-    let tests = Prelude.map (\(p, d) -> length $ evalState (getResult board p d) empty) starts
-    print $ maximum tests
+    let stateResult = evalState (getResult board (0, 0) E) empty
+    putStrLn "State"
+    print $ length stateResult
+    let stateResults = Prelude.map (\(p, d) -> length $ evalState (getResult board p d) empty) starts
+    print $ maximum stateResults
+    putStrLn "BFS"
+    let bfsResult = bfs board [((0, 0), E)] empty
+    print $ length bfsResult
+    let bfsResults = Prelude.map (\(p, d) -> length $ bfs board [(p, d)] empty) starts
+    print $ maximum bfsResults
