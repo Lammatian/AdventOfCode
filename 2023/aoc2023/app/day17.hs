@@ -9,7 +9,8 @@ data Direction = N | E | S | W deriving (Eq, Ord, Show)
 type Moves = (Int, Direction)
 type State = (Point, Moves)
 type PQueue = MinQueue (Int, State, State)
--- Sample, part 1: 102
+type MovePredicate = Direction -> Moves -> Bool
+type StopPredicate = Moves -> Bool
 
 parseBoard :: [String] -> [[Int]]
 parseBoard = map (map digitToInt)
@@ -37,8 +38,11 @@ isOppositeDir E W = True
 isOppositeDir W E = True
 isOppositeDir _ _ = False
 
-canMove :: Direction -> Moves -> Bool
-canMove d (mc, md) = not (isOppositeDir d md) && not (md == d && mc >= 3)
+canMoveSimple :: MovePredicate
+canMoveSimple d (mc, md) = not (isOppositeDir d md) && not (md == d && mc >= 3)
+
+canStopSimple :: StopPredicate
+canStopSimple _ = True
 
 updateMoveCount :: Moves -> Direction -> Moves
 updateMoveCount (mc, md) d
@@ -52,18 +56,33 @@ retracePath m (cp, cm) t
   | otherwise = cp : retracePath m (M.findWithDefault ((0, 0), (0, N)) (cp, cm) m) t
 
 -- Dijkstra with minimising loss, storing also current and last state in the queue
-dijkstraRec :: Board -> Point -> Map State State -> PQueue -> Int
-dijkstraRec b t seen q
-  | (currPoint, currMoves) `M.member` seen = dijkstraRec b t seen (deleteMin q)
-  | currPoint == t                         = currLoss
-  | otherwise                              = dijkstraRec b t (M.insert (currPoint, currMoves) (lastPoint, lastMoves) seen) newQ
+dijkstraRec :: Board -> MovePredicate -> StopPredicate -> Point -> Map State State -> PQueue -> Int
+dijkstraRec b canMove canStop t seen q
+  | (currPoint, currMoves) `M.member` seen = dijkstraRec b canMove canStop t seen (deleteMin q)
+  | currPoint == t && canStop currMoves    = currLoss
+  | otherwise                              = dijkstraRec b canMove canStop t (M.insert (currPoint, currMoves) (lastPoint, lastMoves) seen) newQ
   where
     (currLoss, (currPoint, currMoves), (lastPoint, lastMoves)) = findMin q
-    neighbours = [(currLoss + l, (p, updateMoveCount currMoves d), (currPoint, currMoves)) | (l, p, d) <- potentialNeighbours currPoint b, inBounds p b, canMove d currMoves, not (M.member (p, updateMoveCount currMoves d) seen)]
+    neighbours = [(currLoss + l, (p, updateMoveCount currMoves d), (currPoint, currMoves)) |
+      (l, p, d) <- potentialNeighbours currPoint b,
+      inBounds p b,
+      canMove d currMoves,
+      not (M.member (p, updateMoveCount currMoves d) seen)]
     newQ = foldl (flip PQ.insert) (deleteMin q) neighbours
 
-dijkstra :: Board -> Point -> Point -> Int
-dijkstra b s t = dijkstraRec b t M.empty (PQ.insert (0, (s, (0, N)), ((0, 0), (0, N))) PQ.empty)
+dijkstra :: Board -> MovePredicate -> StopPredicate -> Point -> Point -> Int
+dijkstra b canMove canStop s t = dijkstraRec b canMove canStop t M.empty (PQ.insert (0, (s, (0, N)), ((0, 0), (0, N))) PQ.empty)
+
+canMoveUltra :: Direction -> Moves -> Bool
+canMoveUltra d (mc, md)
+  | mc == 0            = True
+  | d == md && mc < 10 = True
+  | isOppositeDir d md = False
+  | d /= md && mc >= 4 = True
+  | otherwise          = False
+
+canStopUltra :: StopPredicate
+canStopUltra (mc, _) = mc >= 4
 
 main :: IO ()
 main =
@@ -73,4 +92,5 @@ main =
     let board = parseBoard $ lines contents
     let start = (0, 0)
     let end = (length board - 1, length (head board) - 1)
-    print $ dijkstra board start end
+    print $ dijkstra board canMoveSimple canStopSimple start end
+    print $ dijkstra board canMoveUltra canStopUltra start end
