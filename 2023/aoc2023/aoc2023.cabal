@@ -43,6 +43,7 @@ library
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -67,6 +68,7 @@ executable aoc2023-exe
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -87,6 +89,7 @@ executable day01
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -107,6 +110,7 @@ executable day02
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -127,6 +131,7 @@ executable day03
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -147,6 +152,7 @@ executable day04
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -167,6 +173,7 @@ executable day05
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -187,6 +194,7 @@ executable day06
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -207,6 +215,7 @@ executable day07
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -227,6 +236,7 @@ executable day08
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -247,6 +257,7 @@ executable day09
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -267,6 +278,7 @@ executable day10
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -287,6 +299,7 @@ executable day11
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -307,6 +320,7 @@ executable day12
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -327,6 +341,7 @@ executable day13
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -347,6 +362,7 @@ executable day14
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -367,6 +383,7 @@ executable day15
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -387,6 +404,7 @@ executable day16
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -407,6 +425,7 @@ executable day17
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -427,6 +446,28 @@ executable day18
     , mtl
     , ordered-containers
     , pqueue
+    , range
+    , split
+    , vector
+  default-language: Haskell2010
+
+executable day19
+  main-is: day19.hs
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      MemoTrie
+    , QuickCheck
+    , aoc2023
+    , base >=4.7 && <5
+    , containers
+    , data-clist
+    , hlint
+    , mtl
+    , ordered-containers
+    , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
@@ -452,6 +493,7 @@ test-suite aoc2023-test
     , mtl
     , ordered-containers
     , pqueue
+    , range
     , split
     , vector
   default-language: Haskell2010
