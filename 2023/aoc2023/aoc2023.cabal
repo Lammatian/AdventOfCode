@@ -472,6 +472,27 @@ executable day19
     , vector
   default-language: Haskell2010
 
+executable day20
+  main-is: day20.hs
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      MemoTrie
+    , QuickCheck
+    , aoc2023
+    , base >=4.7 && <5
+    , containers
+    , data-clist
+    , hlint
+    , mtl
+    , ordered-containers
+    , pqueue
+    , range
+    , split
+    , vector
+  default-language: Haskell2010
+
 test-suite aoc2023-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
