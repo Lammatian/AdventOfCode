@@ -7,7 +7,7 @@ import qualified Data.Map as M (map, filter)
 import Data.Sequence as Sq (empty, Seq ((:|>), (:<|), Empty), (><), fromList)
 import Data.List (findIndex, elemIndex, sort)
 import Data.Maybe (fromJust)
-import qualified Data.Vector as V (Vector, fromList, (!), length, map, slice, filter)
+import qualified Data.Vector as V (Vector, fromList, (!), length, map, slice, filter, head, last)
 import Debug.Trace (trace)
 
 type Board = [String]
@@ -106,6 +106,28 @@ translatedBoxPoint (br, bc) NW = (br + 1, bc + 1)
 boxMidDistances :: Board -> BoxPoint -> BoxPoint -> Int
 boxMidDistances b (br1, bc1) (br2, bc2) = length b * (abs (br1 - br2) + abs (bc1 - bc2))
 
+vIsAnyReachable :: Board -> BoxPoint -> Map (Direction, Bool) (V.Vector Int) -> Int -> Bool
+vIsAnyReachable b bp m limit = limit >= V.head (m!(boxDir, needOdd)) + boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir)
+  where
+    boxDir = boxDirection (0, 0) bp
+    oddBox = odd $ uncurry (+) bp
+    oddLimit = odd limit
+    needOdd = if oddBox then oddLimit else not oddLimit 
+
+vIsBoxPartiallyReachable :: Board -> BoxPoint -> Map (Direction, Bool) (V.Vector Int) -> Int -> Bool
+vIsBoxPartiallyReachable = vIsAnyReachable
+
+vAreAllReachable :: Board -> BoxPoint -> Map (Direction, Bool) (V.Vector Int) -> Int -> Bool
+vAreAllReachable b bp m limit = limit >= V.last (m!(boxDir, needOdd)) + boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir)
+  where
+    boxDir = boxDirection (0, 0) bp
+    oddBox = odd $ uncurry (+) bp
+    oddLimit = odd limit
+    needOdd = if oddBox then oddLimit else not oddLimit 
+
+vIsBoxFullyReachable :: Board -> BoxPoint -> Map (Direction, Bool) (V.Vector Int) -> Int -> Bool
+vIsBoxFullyReachable = vAreAllReachable
+
 isAnyReachable :: Board -> BoxPoint -> Map Direction [Distance] -> Int -> Bool
 isAnyReachable b bp m limit = limit >= head (m!boxDir) + boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir)
   where
@@ -122,31 +144,19 @@ areAllReachable b bp m limit = limit >= last (m!boxDir) + boxMidDistances b (0, 
 isBoxFullyReachable :: Board -> BoxPoint -> Map Direction [Distance] -> Int -> Bool
 isBoxFullyReachable = areAllReachable
 
-smallerEqCountRec :: V.Vector Int -> Int -> Int -> Int -> Int
-smallerEqCountRec xs i a b
-  | a >= b          = a
-  | i >= (xs V.! m) = smallerEqCountRec xs i (m + 1) b
-  | otherwise       = smallerEqCountRec xs i a m
-  where
-    m = a + (b - a) `div` 2
-
-smallerEqCount :: V.Vector Int -> Int -> Int
-smallerEqCount xs i = smallerEqCountRec xs i 0 (V.length xs - 1)
-
 smallerEqRec :: V.Vector Int -> Int -> Int -> Int -> V.Vector Int
 smallerEqRec xs i a b
-  | a >= b          = V.slice 0 (if a > 0 then a - 1 else 0) xs
+  | a > b           = V.slice 0 a xs
   | i >= (xs V.! m) = smallerEqRec xs i (m + 1) b
-  | otherwise       = smallerEqRec xs i a m
+  | otherwise       = smallerEqRec xs i a (m - 1)
   where
     m = a + (b - a) `div` 2
 
 smallerEq :: V.Vector Int -> Int -> V.Vector Int
 smallerEq xs i = smallerEqRec xs i 0 (V.length xs - 1)
 
-vReachableCount :: Board -> BoxPoint -> Map (Direction, Bool) (V.Vector Distance) -> Int -> Int
-vReachableCount b bp m l = smallerEqCount distances (l - boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir))
--- vReachableCount b bp m l = smallerEqCount distances (l - boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir))
+vReachable :: Board -> BoxPoint -> Map (Direction, Bool) (V.Vector Distance) -> Int -> V.Vector Int
+vReachable b bp m l = smallerEq distances (trace (show updatedLimit ++ show distances) updatedLimit)
   where
     boxDir = boxDirection (0, 0) bp
     -- There is NO WAY I'll understand this in like 1 hour from now XD
@@ -154,36 +164,28 @@ vReachableCount b bp m l = smallerEqCount distances (l - boxMidDistances b (0, 0
     oddLimit = odd l
     needOdd = if oddBox then oddLimit else not oddLimit 
     distances = m!(boxDir, needOdd)
-    -- distances = V.map (+ boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir)) (m!boxDir)
+    updatedLimit = l - boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir)
 
--- Counts how many elements of xs are smaller than i Assumes sorted list
--- This could definitely be improved with vector lol
-findIndexS :: [Int] -> Int -> Int
-findIndexS [] _ = 0
-findIndexS (x:xs) i
-  | i >= x    = 1 + findIndexS xs i
-  | otherwise = 0
+smallerEqCountRec :: V.Vector Int -> Int -> Int -> Int -> Int
+smallerEqCountRec xs i a b
+  | a > b           = a
+  | i >= (xs V.! m) = smallerEqCountRec xs i (m + 1) b
+  | otherwise       = smallerEqCountRec xs i a (m - 1)
+  where
+    m = a + (b - a) `div` 2
 
-trim :: [Int] -> Int -> [Int]
-trim [] _ = []
-trim (x:xs) i
-  | i >= x    = x : trim xs i
-  | otherwise = []
+smallerEqCount :: V.Vector Int -> Int -> Int
+smallerEqCount xs i = smallerEqCountRec xs i 0 (V.length xs - 1)
 
-reachable :: Board -> BoxPoint -> Map Direction [Distance] -> Int -> [Distance]
-reachable b bp m = trim distances
+vReachableCount :: Board -> BoxPoint -> Map (Direction, Bool) (V.Vector Distance) -> Int -> Int
+vReachableCount b bp m l = smallerEqCount distances (l - boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir))
   where
     boxDir = boxDirection (0, 0) bp
-    distances = map (+ boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir)) (m!boxDir)
-
-reachableCount :: Board -> BoxPoint -> Map Direction [Distance] -> Int -> Int
-reachableCount b bp m limit = length $ filter odd r
-  where
-    r = reachable b bp m limit
--- reachableCount b bp m limit = findIndexS distances limit
---   where
---     boxDir = boxDirection (0, 0) bp
---     distances = map (+ boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir)) (m!boxDir)
+    -- There is NO WAY I'll understand this in like 1 hour from now XD
+    oddBox = odd $ uncurry (+) bp
+    oddLimit = odd l
+    needOdd = if oddBox then oddLimit else not oddLimit 
+    distances = m!(boxDir, needOdd)
 
 -- Fully reachable form a 'diamond shape' of size 2n*(n+1) + 1, where n is the furthest point from middle
 fullyReachableBoxes :: Integer -> Integer
@@ -218,12 +220,7 @@ main =
     let test = [((k, True), V.fromList (filter odd v)) | (k, v) <- M.assocs shortestPathByDir]
     let test2 = [((k, False), V.fromList (filter even v)) | (k, v) <- M.assocs shortestPathByDir]
     let vShortestPathByDir = M.fromList (test ++ test2)
-    -- let vShortestPathByDir = M.map V.fromList shortestPathByDir
-    -- print $ shortest board N
-    -- print $ length $ shortest board N
-    -- print (shortestPathByDir!N)
     print $ isBoxFullyReachable board (-1, 0) shortestPathByDir steps
-    -- let furthestFullyReachable = length $ takeWhile id $ [isBoxFullyReachable board (x, 0) shortestPathByDir steps | x <- [1..]]
     -- Technically this works but not sure if guaranteed
     let furthestFullyReachable = steps `div` length board - 1
     print furthestFullyReachable
@@ -236,21 +233,19 @@ main =
     let border2 = getBorder $ furthestFullyReachable + 2
     let border3 = getBorder $ furthestFullyReachable + 3
     -- This confirms anything closer than the border is fully reachable
-    -- let border0 = getBorder $ furthestFullyReachable + 0
-    -- print $ all (\bp -> isBoxFullyReachable board bp shortestPathByDir steps) border0
-    -- print $ any (\bp -> isBoxFullyReachable board bp shortestPathByDir steps) border0
-    print $ all (\bp -> isBoxPartiallyReachable board bp shortestPathByDir steps) border1
-    print $ any (\bp -> isBoxPartiallyReachable board bp shortestPathByDir steps) border1
-    print $ all (\bp -> isBoxPartiallyReachable board bp shortestPathByDir steps) border2
-    print $ any (\bp -> isBoxPartiallyReachable board bp shortestPathByDir steps) border2
-    print $ all (\bp -> isBoxPartiallyReachable board bp shortestPathByDir steps) border3
-    print $ any (\bp -> isBoxPartiallyReachable board bp shortestPathByDir steps) border3
-    print $ reachableCount board (head border1) shortestPathByDir steps
-    print $ reachableCount board (last border1) shortestPathByDir steps
-    print $ reachableCount board (0, 1) shortestPathByDir steps
-    print $ reachableCount board (0, 2) shortestPathByDir steps
-    let reachableInOdd = toInteger $ reachableCount board (0, if odd steps then 2 else 1) shortestPathByDir steps
-    let reachableInEven = toInteger $ reachableCount board (0, if odd steps then 1 else 2) shortestPathByDir steps
+    let border0 = getBorder $ furthestFullyReachable + 0
+    print $ all (\bp -> vIsBoxFullyReachable board bp vShortestPathByDir steps) border0
+    print $ any (\bp -> vIsBoxPartiallyReachable board bp vShortestPathByDir steps) border1
+    print $ any (\bp -> vIsBoxPartiallyReachable board bp vShortestPathByDir steps) border2
+    print $ any (\bp -> vIsBoxPartiallyReachable board bp vShortestPathByDir steps) border3
+    -- There's 14298 + 1 dots in input (one is 'S'), so these two should sum to 14299
+    -- ACTUALLY some of them are unreachable, so let's accept this sum is fine
+    print "Test 14299"
+    print $ vReachableCount board (0, 1) vShortestPathByDir steps
+    print $ vReachableCount board (0, 2) vShortestPathByDir steps
+    print "Done"
+    let reachableInOdd = toInteger $ vReachableCount board (0, 1) vShortestPathByDir steps
+    let reachableInEven = toInteger $ vReachableCount board (0, 2) vShortestPathByDir steps
     print reachableInOdd
     print reachableInEven
     let fullyReachableBoxesOdd = fullyReachableOdd (odd steps) $ toInteger furthestFullyReachable
@@ -265,11 +260,11 @@ main =
     -- Incorrect: 584217089640151
     -- Incorrect: 584211412498479
     -- Incorrect: 584211312562858
+    -- Incorrect: 584129462387457
+    -- Incorrect: 584211267652369
     print totalFullyReachable
     let reachableBorder = border1 ++ border2
     print $ length reachableBorder
     let vPartiallyReachableCount = toInteger $ sum $ map (\bp -> vReachableCount board bp vShortestPathByDir steps) reachableBorder
     print vPartiallyReachableCount
-    let partiallyReachableCount = toInteger $ sum $ map (\bp -> reachableCount board bp shortestPathByDir steps) reachableBorder
-    print partiallyReachableCount
-    print $ totalFullyReachable + partiallyReachableCount
+    print $ totalFullyReachable + vPartiallyReachableCount
