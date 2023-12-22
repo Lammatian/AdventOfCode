@@ -1,14 +1,12 @@
 {-# LANGUAGE TupleSections #-}
 import System.Environment (getArgs)
-import Lib (printGrid)
 import Data.Set as St (Set)
 import Data.Map as M (Map, empty, keysSet, member, insert, elems, fromList, (!), assocs)
-import qualified Data.Map as M (map, filter)
+import qualified Data.Map as M (filter)
 import Data.Sequence as Sq (empty, Seq ((:|>), (:<|), Empty), (><), fromList)
 import Data.List (findIndex, elemIndex, sort)
 import Data.Maybe (fromJust)
-import qualified Data.Vector as V (Vector, fromList, (!), length, map, slice, filter, head, last)
-import Debug.Trace (trace)
+import qualified Data.Vector as V (Vector, fromList, (!), length, head, last)
 
 type Board = [String]
 type Point = (Int, Int)
@@ -127,26 +125,6 @@ areAllReachable b bp m limit = limit >= V.last (m!(boxDir, needOdd)) + boxMidDis
 isBoxFullyReachable :: Board -> BoxPoint -> Map (Direction, Bool) (V.Vector Int) -> Int -> Bool
 isBoxFullyReachable = areAllReachable
 
-smallerEqRec :: V.Vector Int -> Int -> Int -> Int -> V.Vector Int
-smallerEqRec xs i a b
-  | a > b           = V.slice 0 a xs
-  | i >= (xs V.! m) = smallerEqRec xs i (m + 1) b
-  | otherwise       = smallerEqRec xs i a (m - 1)
-  where
-    m = a + (b - a) `div` 2
-
-smallerEq :: V.Vector Int -> Int -> V.Vector Int
-smallerEq xs i = smallerEqRec xs i 0 (V.length xs - 1)
-
-reachable :: Board -> BoxPoint -> Map (Direction, Bool) (V.Vector Distance) -> Int -> V.Vector Int
-reachable b bp m l = smallerEq distances (trace (show updatedLimit ++ show distances) updatedLimit)
-  where
-    boxDir = boxDirection (0, 0) bp
-    -- There is NO WAY I'll understand this in like 1 hour from now XD
-    needOdd = oddBox bp
-    distances = m!(boxDir, needOdd)
-    updatedLimit = l - boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir)
-
 smallerEqCountRec :: V.Vector Int -> Int -> Int -> Int -> Int
 smallerEqCountRec xs i a b
   | a > b           = a
@@ -186,8 +164,12 @@ getBorder l = [(0, -l)] ++ topLeft ++ [(-l, 0)] ++ topRight ++ [(0, l)] ++ botRi
     botRight = [(r, l - r) | r <- [1..l-1]]
     botLeft = [(r, r - l) | r <- [l-1,l-2..1]]
 
--- TODO: Could DP be easier here?
 -- Probably any solution would be easier to implement here LOL
+-- If only I knew any other solution, ideally one that works on sample input
+-- There is a lot of assumptions here:
+-- 1. From 'S', all the straight paths have no obstacles
+-- 2. The number of steps is assumed to be odd in some places, in others it's not
+-- Therefore this will not work on sample input with the amount of steps given in examples
 main :: IO ()
 main =
   do
