@@ -38,7 +38,7 @@ isReachable b p@(r, c) = notRock && inBounds
     inBounds = r >= 0 && r < rr && c >= 0 && c < cc
 
 neighbours :: Board -> Point -> [Point]
-neighbours b (r, c) = [(r + dr, c + dc) | dr <- [-1,0,1], dc <- [-1,0,1], dr * dc == 0, isReachable b (r + dr, c + dc)]
+neighbours b (r, c) = [(r + dr, c + dc) | (dr, dc) <- [(-1, 0), (0, 1), (1, 0), (0, -1)], isReachable b (r + dr, c + dc)]
 
 bfsRec :: Board -> Distance -> Seq (Point, Distance) -> Map Point Distance -> Set Point
 bfsRec _ maxD Sq.Empty seen = keysSet $ M.filter ((==(maxD `mod` 2)) . (`mod` 2)) seen
@@ -71,7 +71,7 @@ shortest b dir = case dir of
   SE -> map (\d -> d + l + 2) $ bfs2 b (Sq.empty:|>((0, 0), 0)) M.empty
   S  -> map (\d -> d + hl + 1) $ bfs2 b (Sq.empty:|>((0, hl), 0)) M.empty
   SW -> map (\d -> d + l + 2) $ bfs2 b (Sq.empty:|>((0, l - 1), 0)) M.empty
-  W  -> map (\d -> d + hl + 1) $ bfs2 b (Sq.empty:|>((hl, l), 0)) M.empty
+  W  -> map (\d -> d + hl + 1) $ bfs2 b (Sq.empty:|>((hl, l - 1), 0)) M.empty
   NW -> map (\d -> d + l + 2) $ bfs2 b (Sq.empty:|>((l - 1, l - 1), 0)) M.empty
   where
     l = length b
@@ -106,13 +106,14 @@ translatedBoxPoint (br, bc) NW = (br + 1, bc + 1)
 boxMidDistances :: Board -> BoxPoint -> BoxPoint -> Int
 boxMidDistances b (br1, bc1) (br2, bc2) = length b * (abs (br1 - br2) + abs (bc1 - bc2))
 
+oddBox :: BoxPoint -> Bool
+oddBox bp = odd $ uncurry (+) bp
+
 isAnyReachable :: Board -> BoxPoint -> Map (Direction, Bool) (V.Vector Int) -> Int -> Bool
 isAnyReachable b bp m limit = limit >= V.head (m!(boxDir, needOdd)) + boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir)
   where
     boxDir = boxDirection (0, 0) bp
-    oddBox = odd $ uncurry (+) bp
-    oddLimit = odd limit
-    needOdd = if oddBox then oddLimit else not oddLimit 
+    needOdd = if boxDir `elem` [NE, SE, SW, NW] then not (oddBox bp) else oddBox bp
 
 isBoxPartiallyReachable :: Board -> BoxPoint -> Map (Direction, Bool) (V.Vector Int) -> Int -> Bool
 isBoxPartiallyReachable = isAnyReachable
@@ -121,9 +122,7 @@ areAllReachable :: Board -> BoxPoint -> Map (Direction, Bool) (V.Vector Int) -> 
 areAllReachable b bp m limit = limit >= V.last (m!(boxDir, needOdd)) + boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir)
   where
     boxDir = boxDirection (0, 0) bp
-    oddBox = odd $ uncurry (+) bp
-    oddLimit = odd limit
-    needOdd = if oddBox then oddLimit else not oddLimit 
+    needOdd = if boxDir `elem` [NE, SE, SW, NW] then not (oddBox bp) else oddBox bp
 
 isBoxFullyReachable :: Board -> BoxPoint -> Map (Direction, Bool) (V.Vector Int) -> Int -> Bool
 isBoxFullyReachable = areAllReachable
@@ -144,9 +143,7 @@ reachable b bp m l = smallerEq distances (trace (show updatedLimit ++ show dista
   where
     boxDir = boxDirection (0, 0) bp
     -- There is NO WAY I'll understand this in like 1 hour from now XD
-    oddBox = odd $ uncurry (+) bp
-    oddLimit = odd l
-    needOdd = if oddBox then oddLimit else not oddLimit 
+    needOdd = oddBox bp
     distances = m!(boxDir, needOdd)
     updatedLimit = l - boxMidDistances b (0, 0) (translatedBoxPoint bp boxDir)
 
@@ -166,19 +163,17 @@ reachableCount b bp m l = smallerEqCount distances (l - boxMidDistances b (0, 0)
   where
     boxDir = boxDirection (0, 0) bp
     -- There is NO WAY I'll understand this in like 1 hour from now XD
-    oddBox = odd $ uncurry (+) bp
-    oddLimit = odd l
-    needOdd = if oddLimit then not oddBox else oddBox 
+    needOdd = if boxDir `elem` [NE, SE, SW, NW] then not (oddBox bp) else oddBox bp
     distances = m!(boxDir, needOdd)
 
 -- Fully reachable form a 'diamond shape' of size 2n*(n+1) + 1, where n is the furthest point from middle
-fullyReachableBoxes :: Integer -> Integer
-fullyReachableBoxes n = 2 * n * (n + 1) + 1
+fullyReachableBoxes :: Int -> Int
+fullyReachableBoxes n = n * n + (n + 1) * (n + 1)
 
-fullyReachableEven :: Bool -> Integer -> Integer
+fullyReachableEven :: Bool -> Int -> Int
 fullyReachableEven oddSteps n = fullyReachableBoxes n - fullyReachableOdd oddSteps n
 
-fullyReachableOdd :: Bool -> Integer -> Integer
+fullyReachableOdd :: Bool -> Int -> Int
 fullyReachableOdd oddSteps n
   | oddSteps  = if even n then (n + 1) * (n + 1) else n * n
   | otherwise = if even n then n * n else (n + 1) * (n + 1)
@@ -192,6 +187,7 @@ getBorder l = [(0, -l)] ++ topLeft ++ [(-l, 0)] ++ topRight ++ [(0, l)] ++ botRi
     botLeft = [(r, r - l) | r <- [l-1,l-2..1]]
 
 -- TODO: Could DP be easier here?
+-- Probably any solution would be easier to implement here LOL
 main :: IO ()
 main =
   do
@@ -201,16 +197,19 @@ main =
     let board = lines contents
     print $ length $ bfs board steps
     let shortestPathByDir = shortestByDir board
-    -- TODO: Figure out what this odd/even stuff really means lol
+    -- If number of steps is odd, then in all 'odd boxes', spots after odd steps are reachable
+    -- and in 'even boxes', spots after even steps are reachable
     let test = [((k, True), V.fromList (filter odd v)) | (k, v) <- M.assocs shortestPathByDir]
     let test2 = [((k, False), V.fromList (filter even v)) | (k, v) <- M.assocs shortestPathByDir]
     let vShortestPathByDir = M.fromList (test ++ test2)
     -- Technically this works but not sure if guaranteed
     let furthestFullyReachable = steps `div` length board - 1
     print furthestFullyReachable
-    print $ fullyReachableBoxes $ toInteger furthestFullyReachable
-    print $ fullyReachableEven (odd steps) $ toInteger furthestFullyReachable
-    print $ fullyReachableOdd (odd steps) $ toInteger furthestFullyReachable
+    print $ fullyReachableBoxes furthestFullyReachable
+    let fullyReachableBoxesOdd = fullyReachableOdd (even steps) furthestFullyReachable
+    let fullyReachableBoxesEven = fullyReachableEven (even steps) furthestFullyReachable
+    print fullyReachableBoxesEven
+    print fullyReachableBoxesOdd
     -- By manual inspection, the 'diamond border' of partially reachable boxes is of width 2
     -- I.e. there are some boxes partially reachable that are (furthestFullyReachable + N) away from middle, where N is 1 or 2
     let border1 = getBorder $ furthestFullyReachable + 1
@@ -224,20 +223,24 @@ main =
     print $ any (\bp -> isBoxPartiallyReachable board bp vShortestPathByDir steps) border3
     -- There's 14298 + 1 dots in input (one is 'S'), so these two should sum to 14299
     -- ACTUALLY some of them are unreachable, so let's accept this sum is fine
+    let reachableInOdd = reachableCount board (0, 1) vShortestPathByDir steps
+    let reachableInEven = reachableCount board (0, 2) vShortestPathByDir steps
     print "Test 14299"
-    print $ reachableCount board (0, 1) vShortestPathByDir steps
-    print $ reachableCount board (0, 2) vShortestPathByDir steps
+    print reachableInOdd
+    print reachableInEven
     print "Done"
-    let reachableInOdd = toInteger $ reachableCount board (0, 1) vShortestPathByDir steps
-    let reachableInEven = toInteger $ reachableCount board (0, 2) vShortestPathByDir steps
-    let fullyReachableBoxesOdd = fullyReachableOdd (odd steps) $ toInteger furthestFullyReachable
-    let fullyReachableBoxesEven = fullyReachableEven (odd steps) $ toInteger furthestFullyReachable
     let totalFullyReachable = reachableInEven * fullyReachableBoxesEven + reachableInOdd * fullyReachableBoxesOdd
-    -- This is already too high of an answer, but half of it is too low, so right ballpark
+    print totalFullyReachable
+    let reachableBorder = border1 ++ border2 ++ border3
+    print $ length reachableBorder
+    let partiallyReachableCount = sum $ map (\bp -> reachableCount board bp vShortestPathByDir steps) reachableBorder
+    print partiallyReachableCount
+    print $ totalFullyReachable + partiallyReachableCount
+    print $ length $ bfs board $ steps + 1
+    print $ length $ bfs board steps
     -- Too low: 568411253849275
     -- Too high: 1168411253849275
     -- Too high: 1168416917032166
-    -- Inverted: 1168417030926653
     -- Incorrect: 584211426457260 (Full: 584205649379882)
     -- Incorrect: 584217089640151
     -- Incorrect: 584211412498479
@@ -246,9 +249,7 @@ main =
     -- Incorrect: 584211267652369
     -- Incorrect: 584211426457175
     -- Incorrect: 584211381546686
-    print totalFullyReachable
-    let reachableBorder = border1 ++ border2
-    print $ length reachableBorder
-    let partiallyReachableCount = toInteger $ sum $ map (\bp -> reachableCount board bp vShortestPathByDir steps) reachableBorder
-    print partiallyReachableCount
-    print $ totalFullyReachable + partiallyReachableCount
+    -- Incorrect: 584211426457292
+    -- Incorrect: 584211267652385
+    -- Incorrect: 584211381546787
+    -- Incorrect: 584211426457276
