@@ -186,39 +186,18 @@ main =
     let vShortestPathByDir = M.fromList (test ++ test2)
     -- Technically this works but not sure if guaranteed
     let furthestFullyReachable = steps `div` length board - 1
-    print furthestFullyReachable
-    print $ fullyReachableBoxes furthestFullyReachable
     let fullyReachableBoxesOdd = fullyReachableOdd (even steps) furthestFullyReachable
     let fullyReachableBoxesEven = fullyReachableEven (even steps) furthestFullyReachable
-    print fullyReachableBoxesEven
-    print fullyReachableBoxesOdd
     -- By manual inspection, the 'diamond border' of partially reachable boxes is of width 2
     -- I.e. there are some boxes partially reachable that are (furthestFullyReachable + N) away from middle, where N is 1 or 2
     let border1 = getBorder $ furthestFullyReachable + 1
     let border2 = getBorder $ furthestFullyReachable + 2
     let border3 = getBorder $ furthestFullyReachable + 3
-    -- This confirms anything closer than the border is fully reachable
-    let border0 = getBorder $ furthestFullyReachable + 0
-    print $ all (\bp -> isBoxFullyReachable board bp vShortestPathByDir steps) border0
-    print $ any (\bp -> isBoxPartiallyReachable board bp vShortestPathByDir steps) border1
-    print $ any (\bp -> isBoxPartiallyReachable board bp vShortestPathByDir steps) border2
-    print $ any (\bp -> isBoxPartiallyReachable board bp vShortestPathByDir steps) border3
-    -- There's 14298 + 1 dots in input (one is 'S'), so these two should sum to 14299
-    -- ACTUALLY some of them are unreachable, so let's accept this sum is fine
     let reachableInOdd = reachableCount board (0, 1) vShortestPathByDir steps
     let reachableInEven = reachableCount board (0, 2) vShortestPathByDir steps
-    print $ length $ bfs board $ steps + 1
-    print $ length $ bfs board steps
-    print "Test 14299"
-    print reachableInOdd
-    print reachableInEven
-    print "Done"
     let totalFullyReachable = reachableInEven * fullyReachableBoxesEven + reachableInOdd * fullyReachableBoxesOdd
-    print totalFullyReachable
     let reachableBorder = border1 ++ border2 ++ border3
-    print $ length reachableBorder
     let partiallyReachableCount = sum $ map (\bp -> reachableCount board bp vShortestPathByDir steps) reachableBorder
-    print partiallyReachableCount
     print $ totalFullyReachable + partiallyReachableCount
     -- This will stay here to make me remember how miserable of an experience this was
     -- Too low: 568411253849275

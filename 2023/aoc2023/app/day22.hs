@@ -1,15 +1,15 @@
 import System.Environment (getArgs)
 import Data.List.Split (splitOn)
-import Data.List (sortOn, delete)
-import Data.Map (Map, member, insert, empty, assocs, insertWith, (!), keys, elems)
+import Data.List (sortOn)
+import Data.Map (Map, member, insert, empty, assocs, insertWith, (!))
 import qualified Data.Map as M (map, filter)
-import Data.Set (fromList, toList)
-import Debug.Trace (trace)
+import Data.Set (Set, fromList, toList, union, singleton, findMin, size, delete)
 
 type Point = (Int, Int, Int)
 type Brick = (Point, Point)
 -- Map from point to brick 'ID'
 type Stack = Map Point Int
+type Support = Map Int (Set Int)
 
 parsePoint :: String -> Point
 parsePoint s = (x, y, z)
@@ -35,78 +35,67 @@ brickZ ((_, _, z), _) = z
 lowerPoint :: Point -> Point
 lowerPoint (x, y, z) = (x, y, z - 1)
 
-lower :: Brick -> Brick
-lower (p1, p2) = (lowerPoint p1, lowerPoint p2)
+lowerBrick :: Brick -> Brick
+lowerBrick (p1, p2) = (lowerPoint p1, lowerPoint p2)
 
 supports :: Stack -> Brick -> Bool
--- supports s b
---   | brickZ b == 1 = Just [0]
---   | otherwise     = if null sups then Nothing else Just sups
---   where
---     oneLower = cubes $ lower b
---     sups = [v | (k, v) <- assocs s, k `elem` oneLower]
 supports s b = any (`member` s) oneLower || brickZ b == 1
   where
-    oneLower = cubes $ lower b
+    oneLower = cubes $ lowerBrick b
 
 addBrickToStack :: Brick -> Int -> Stack -> Stack
 addBrickToStack b i s = foldl (\acc x -> insert x i acc) s $ cubes b
 
 fall :: Stack -> Brick -> Int -> Stack
 fall s b i
-  | supports s b = addBrickToStack b i s
-  | otherwise    = fall s (lower b) i
+  | s `supports` b = addBrickToStack b i s
+  | otherwise      = fall s (lowerBrick b) i
 
 fallAllRec :: Stack -> [(Brick, Int)] -> Stack
-fallAllRec s [] = s
-fallAllRec s ((b, i):bs) = fallAllRec (fall s b i) bs
+fallAllRec = foldl (\s (b, i) -> fall s b i)
 
 fallAll :: Stack -> [Brick] -> Stack
 fallAll s bs = fallAllRec s $ zip bs [1..]
 
-getSupportsRec :: [(Point, Int)] -> Stack -> Map Int [Int]
+getSupportsRec :: [(Point, Int)] -> Stack -> Support
 getSupportsRec [] _ = empty
 getSupportsRec ((p, i):ps) m
-  | lp `member` m && supporterIdx /= i = insertWith (\curr new -> if head new `elem` curr then curr else new ++ curr) i [supporterIdx] (getSupportsRec ps m)
+  | lp `member` m && supporterIdx /= i = insertWith union i (singleton supporterIdx) (getSupportsRec ps m)
   | otherwise                          = getSupportsRec ps m
   where
     lp = lowerPoint p
     supporterIdx = m!lp
 
 -- Returns the mapping from brick ID to IDs of bricks that support it
-getSupports :: Stack -> Map Int [Int]
+getSupports :: Stack -> Support
 getSupports s = getSupportsRec (assocs s) s
 
-nonRemovable :: Map Int [Int] -> [Int]
-nonRemovable m = toList $ fromList $ [head v | (_, v) <- assocs m, length v == 1]
+nonRemovable :: Support -> [Int]
+nonRemovable m = toList $ fromList $ [findMin v | (_, v) <- assocs m, size v == 1]
 
 -- This is still disgustingly slow
-removeSupport :: Map Int [Int] -> Int -> (Map Int [Int], [Int])
-removeSupport m i = (newM, falling)
+removeSupport :: Support -> Int -> (Support, [Int])
+removeSupport s i = (newM, falling)
   where
-    newM = M.map (delete i) m
-    falling = [k | (k, v) <- assocs m, length v == 1, head v == i]
+    newM = M.map (delete i) s
+    falling = [k | (k, v) <- assocs s, size v == 1, findMin v == i]
 
-chainReactionRec :: Map Int [Int] -> [Int] -> Int
+chainReactionRec :: Support -> [Int] -> Int
 chainReactionRec m [] = length $ M.filter null m
 chainReactionRec m (i:is) = chainReactionRec newM (is ++ newFalling)
   where
     (newM, newFalling) = removeSupport m i
 
-chainReaction :: Map Int [Int] -> Int -> Int
-chainReaction m i = r
+chainReaction :: Support -> Int -> Int
+chainReaction s i = r
   where
-    r = chainReactionRec m [i]
+    r = chainReactionRec s [i]
 
-chainReactions :: Map Int [Int] -> [Int] -> Int
-chainReactions m is = sum $ map (chainReaction m) is
+chainReactions :: Support -> [Int] -> Int
+chainReactions s is = sum $ map (chainReaction s) is
 
-getActualSupport :: Map Int [Int] -> Int -> [Int]
-getActualSupport m i
-
-getActualSupports :: Map Int [Int] -> Map Int [Int]
-getActualSupports m = getActualSupportsRec m (keys m)
-
+-- IDEA: Traverse the Support graph such that for each element the 'base' supports are stored
+--       then it's easy to determine which ones fall when a given element is removed
 main :: IO ()
 main =
   do
@@ -117,7 +106,6 @@ main =
     let zSortedBricks = sortOn (\((_, _, z), _) -> z) bricks
     let stacked = fallAll empty zSortedBricks
     let supps = getSupports stacked
-    print supps
     let nRemovable = nonRemovable supps
     print $ length zSortedBricks - length nRemovable
     print $ chainReactions supps nRemovable
