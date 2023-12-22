@@ -66,13 +66,13 @@ bfs2 b ((p, d):<|ss) seen
 shortest :: Board -> Direction -> [Distance]
 shortest b dir = case dir of
   N  -> map (\d -> d + hl + 1) $ bfs2 b (Sq.empty:|>((l - 1, hl), 0)) M.empty
-  NE -> map (\d -> d + l + 2) $ bfs2 b (Sq.empty:|>((l - 1, 0), 0)) M.empty
+  NE -> map (\d -> d + l + 1) $ bfs2 b (Sq.empty:|>((l - 1, 0), 0)) M.empty
   E  -> map (\d -> d + hl + 1) $ bfs2 b (Sq.empty:|>((hl, 0), 0)) M.empty
-  SE -> map (\d -> d + l + 2) $ bfs2 b (Sq.empty:|>((0, 0), 0)) M.empty
+  SE -> map (\d -> d + l + 1) $ bfs2 b (Sq.empty:|>((0, 0), 0)) M.empty
   S  -> map (\d -> d + hl + 1) $ bfs2 b (Sq.empty:|>((0, hl), 0)) M.empty
-  SW -> map (\d -> d + l + 2) $ bfs2 b (Sq.empty:|>((0, l - 1), 0)) M.empty
+  SW -> map (\d -> d + l + 1) $ bfs2 b (Sq.empty:|>((0, l - 1), 0)) M.empty
   W  -> map (\d -> d + hl + 1) $ bfs2 b (Sq.empty:|>((hl, l - 1), 0)) M.empty
-  NW -> map (\d -> d + l + 2) $ bfs2 b (Sq.empty:|>((l - 1, l - 1), 0)) M.empty
+  NW -> map (\d -> d + l + 1) $ bfs2 b (Sq.empty:|>((l - 1, l - 1), 0)) M.empty
   where
     l = length b
     hl = l `div` 2
@@ -195,7 +195,7 @@ main =
     contents <- readFile $ if not (null args) then head args else "inputs/day21/input.txt"
     let steps = if length args > 1 then ((read :: String -> Int) . last) args else 6
     let board = lines contents
-    print $ length $ bfs board steps
+    print $ length $ bfs board 64
     let shortestPathByDir = shortestByDir board
     -- If number of steps is odd, then in all 'odd boxes', spots after odd steps are reachable
     -- and in 'even boxes', spots after even steps are reachable
@@ -225,6 +225,8 @@ main =
     -- ACTUALLY some of them are unreachable, so let's accept this sum is fine
     let reachableInOdd = reachableCount board (0, 1) vShortestPathByDir steps
     let reachableInEven = reachableCount board (0, 2) vShortestPathByDir steps
+    print $ length $ bfs board $ steps + 1
+    print $ length $ bfs board steps
     print "Test 14299"
     print reachableInOdd
     print reachableInEven
@@ -236,8 +238,7 @@ main =
     let partiallyReachableCount = sum $ map (\bp -> reachableCount board bp vShortestPathByDir steps) reachableBorder
     print partiallyReachableCount
     print $ totalFullyReachable + partiallyReachableCount
-    print $ length $ bfs board $ steps + 1
-    print $ length $ bfs board steps
+    -- This will stay here to make me remember how miserable of an experience this was
     -- Too low: 568411253849275
     -- Too high: 1168411253849275
     -- Too high: 1168416917032166
