@@ -71,6 +71,7 @@ minCut g n
 
 -- IDEA: Randomised picking of (source, target) and counting edges along the way
 --       The most picked edges over many iterations will be the cuts
+-- IDEA: Karger's algorithm aka picking edges at random and finding a cut of size 3
 main :: IO ()
 main =
   do
