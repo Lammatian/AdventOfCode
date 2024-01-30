@@ -1,62 +1,58 @@
 import Data.List.Split (splitOn)
-import Data.List (find)
+import Data.Map (fromList, findWithDefault)
+import Data.Tuple (swap)
+import Lib (bisect, bisectOn)
 
 data Game = Game {
   gameId :: Int,
-  diceReveals :: [DiceReveal]
+  diceReveals :: [CubeReveal]
 } deriving (Show)
-data DiceReveal = DiceReveal {
+data CubeReveal = CubeReveal {
   red :: Int,
   green :: Int,
   blue :: Int
 } deriving (Show)
 
-getValue :: [[String]] -> String -> Int
-getValue xs key = case find (\[_, c] -> c == key) xs of
-                    Just [x, _] -> read x :: Int
-                    Nothing -> 0
-
 -- format: "X [red|green|blue], Y [red|green|blue], Z [red|green|blue]"
-instance Read DiceReveal where
+instance Read CubeReveal where
   readsPrec _ input =
-    let values = map words $ splitOn ", " input
-        r = getValue values "red"
-        g = getValue values "green"
-        b = getValue values "blue"
-    -- No idea why, but if I return input as the second argument, it crashes lol
-    in [(DiceReveal r g b, "")]
+    let valueMap = fromList $ map (swap . bisect) $ splitOn ", " input
+        r = read (findWithDefault "0" "red" valueMap) :: Int
+        g = read (findWithDefault "0" "green" valueMap) :: Int
+        b = read (findWithDefault "0" "blue" valueMap) :: Int
+    -- The second argument here is the remainder of the string after successful parsing
+    in [(CubeReveal r g b, "")]
 
 -- format: "Game G: X red, Y green, Z blue; ..."
 instance Read Game where
   readsPrec _ input =
-    let [game, reveals] = splitOn ": " input
+    let (game, rest) = bisectOn ": " input
         gId = read (last $ splitOn " " game) :: Int
-        drs = splitOn "; " reveals
-        pr = map (read :: String -> DiceReveal) drs
-    -- No idea why, but if I return input as the second argument, it crashes lol
-    in [(Game gId pr, "")]
+        revealList = splitOn "; " rest
+        reveals = map (read :: String -> CubeReveal) revealList
+    -- The second argument here is the remainder of the string after successful parsing
+    in [(Game gId reveals, "")]
 
-isDiceRevealPossible :: DiceReveal -> Bool
-isDiceRevealPossible dr = red dr <= 12 && green dr <= 13 && blue dr <= 14
+isCubeRevealPossible :: CubeReveal -> Bool
+isCubeRevealPossible dr = red dr <= 12 && green dr <= 13 && blue dr <= 14
 
 isGamePossible :: Game -> Bool
-isGamePossible g = all isDiceRevealPossible (diceReveals g)
+isGamePossible g = all isCubeRevealPossible (diceReveals g)
 
-minimalDiceRevealPossible :: Game -> DiceReveal
-minimalDiceRevealPossible g = DiceReveal mr mg mb
+minimalCubeRevealPossible :: Game -> CubeReveal
+minimalCubeRevealPossible g = CubeReveal mr mg mb
   where
     mr = maximum $ map red (diceReveals g)
     mg = maximum $ map green (diceReveals g)
     mb = maximum $ map blue (diceReveals g)
 
-cubePower :: DiceReveal -> Int
+cubePower :: CubeReveal -> Int
 cubePower dr = red dr * green dr * blue dr
 
 main :: IO()
 main =
   do
-    contents <- readFile "inputs/day02/input.txt"
-    let games = map (read :: String -> Game) $ lines contents
+    games <- map (read :: String -> Game) . lines <$> readFile "inputs/day02/input.txt"
     let possibleGames = filter isGamePossible games
     print $ sum $ map gameId possibleGames
-    print $ sum $ map (cubePower . minimalDiceRevealPossible) games
+    print $ sum $ map (cubePower . minimalCubeRevealPossible) games
