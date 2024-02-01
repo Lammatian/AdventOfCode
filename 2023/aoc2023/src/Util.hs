@@ -1,4 +1,4 @@
-module Lib
+module Util
     ( printGrid,
       bisect,
       bisectOn
@@ -6,6 +6,7 @@ module Lib
 
 import Data.List.Split (splitOn)
 
+-- Nicely print a grid
 printGrid :: [String] -> IO ()
 printGrid [] = putStrLn ""
 printGrid (s:ss) =
@@ -13,11 +14,11 @@ printGrid (s:ss) =
     putStrLn s
     printGrid ss
 
+-- Given a string, split it into two exactly two parts on whitespace and fail otherwise
 bisect :: String -> (String, String)
-bisect s = case words s of
-  [x, y] -> (x, y)
-  _      -> error $ "Could not split " ++ s ++ " into two parts"
+bisect = bisectOn " "
 
+-- Given a string, split it into two exactly two parts on a delimiter and fail otherwise
 bisectOn :: String -> String -> (String, String)
 bisectOn d s = case splitOn d s of
   [x, y] -> (x, y)

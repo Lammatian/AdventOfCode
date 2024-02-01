@@ -1,7 +1,7 @@
 import Data.List.Split (splitOn)
 import Data.Map (fromList, findWithDefault)
 import Data.Tuple (swap)
-import Lib (bisect, bisectOn)
+import Util (bisect, bisectOn)
 
 data Game = Game {
   gameId :: Int,

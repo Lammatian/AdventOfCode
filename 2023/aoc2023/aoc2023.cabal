@@ -25,7 +25,7 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Util
   other-modules:
       Paths_aoc2023
   autogen-modules:
