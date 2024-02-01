@@ -1,6 +1,7 @@
 import Data.Char (isDigit, digitToInt)
 import Data.List (isPrefixOf)
 import Data.List.NonEmpty as NE (fromList, NonEmpty, head, last)
+import Util (readInput)
 
 numDigits :: String -> [Int]
 numDigits = map digitToInt . filter isDigit
@@ -29,6 +30,6 @@ convertArt digitExtractor = firstLast . NE.fromList . digitExtractor
 main :: IO()
 main =
   do
-    content <- lines <$> readFile "inputs/day01/input.txt"
+    content <- lines <$> readInput 1
     print $ sum $ map (convertArt numDigits) content
     print $ sum $ map (convertArt allDigits) content

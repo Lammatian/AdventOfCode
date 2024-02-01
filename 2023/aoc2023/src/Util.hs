@@ -1,10 +1,22 @@
 module Util
-    ( printGrid,
+    ( readInput,
+      printGrid,
       bisect,
       bisectOn
     ) where
 
 import Data.List.Split (splitOn)
+import System.Environment (getArgs)
+
+type Day = Int
+
+-- Get command line args and read input for a given day
+readInput :: Day -> IO String
+readInput day = do
+  args <- getArgs
+  readFile $ if not (null args) then head args else "inputs/day" ++ dayStr ++ "/input.txt"
+  where
+    dayStr = if day > 9 then show day else "0" ++ show day
 
 -- Nicely print a grid
 printGrid :: [String] -> IO ()

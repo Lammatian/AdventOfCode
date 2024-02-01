@@ -1,7 +1,7 @@
 import Data.List.Split (splitOn)
 import Data.Map (fromList, findWithDefault)
 import Data.Tuple (swap)
-import Util (bisect, bisectOn)
+import Util (readInput, bisect, bisectOn)
 
 data Game = Game {
   gameId :: Int,
@@ -52,7 +52,7 @@ cubePower dr = red dr * green dr * blue dr
 main :: IO()
 main =
   do
-    games <- map (read :: String -> Game) . lines <$> readFile "inputs/day02/input.txt"
+    games <- map (read :: String -> Game) . lines <$> readInput 2
     let possibleGames = filter isGamePossible games
     print $ sum $ map gameId possibleGames
     print $ sum $ map (cubePower . minimalCubeRevealPossible) games
