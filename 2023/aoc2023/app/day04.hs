@@ -1,52 +1,43 @@
 import Data.Set (Set, fromList, intersection, size)
-import Data.List.Split (splitOn)
-import Control.Exception (throwIO)
+import Util (readInput, bisectOn)
 
-data Card = Card !(Set Int) !(Set Int)
+type Card = (Set Int, Set Int)
 
 parseListOnCard :: String -> Set Int
 parseListOnCard = fromList . map (read :: String -> Int) . words
 
-parseCardString :: String -> IO Card
-parseCardString s = case length splitOnBar of
-  2 -> pure $ Card (parseListOnCard (head splitOnBar)) (parseListOnCard (last splitOnBar))
-  _ -> throwIO $ userError "unexpected number of '|' in string"
+parseCardString :: String -> Card
+parseCardString s = (parseListOnCard c1, parseListOnCard c2)
   where
-    splitOnBar = (splitOn " | " . last . splitOn ": ") s
+    (c1, c2) = (bisectOn " | " . snd . bisectOn ": ") s
 
-parseInput :: String -> IO [Card]
-parseInput s =
-  do
-    let ls = lines s
-    mapM parseCardString ls
+matches :: Card -> Int
+matches (winning, owned) = size $ intersection winning owned
 
 scratchcardPoints :: Card -> Int
-scratchcardPoints (Card winning owned) = if matches > 0 then 2 ^ (matches - 1) else 0
+scratchcardPoints c = if m > 0 then 2 ^ (m - 1) else 0
   where
-    matches = size (intersection winning owned)
+    m = matches c
 
 -- Given a card and number of copies, return how many copies of subsequent scratchcards are to be added
+-- E.g. if card has 3 matches and there are 4 copies of it, returns [4,4,4]
 scratchcardsWon :: Card -> Int -> [Int]
-scratchcardsWon (Card winning owned) = replicate $ size $ intersection winning owned
+scratchcardsWon = replicate . matches
 
--- Given current number of copies and new copies, return the updated list
--- In other words, sum the two lists and add remaining elements of the first list at the end
-updateNumberOfCopies :: [Int] -> [Int] -> [Int]
-updateNumberOfCopies (a:as) (b:bs) = a + b : updateNumberOfCopies as bs
-updateNumberOfCopies as _ = as
+-- Given current scratchcard copies and new copies, update overall copies
+updateCopies :: [Int] -> [Int] -> [Int]
+updateCopies xs ys = zipWith (+) xs ys ++ drop (length ys) xs
 
-totalScratchcardCount :: [Card] -> [Int] -> Int -> Int
-totalScratchcardCount (card:cards) (currentCardCount:copies) total = totalScratchcardCount cards updatedNumberOfCopies (total + currentCardCount)
+totalScratchcardCount :: [Card] -> [Int] -> Int
+totalScratchcardCount [] _ = 0
+totalScratchcardCount _ [] = 0
+totalScratchcardCount (card:cards) (curCopies:copies) = curCopies + totalScratchcardCount cards updatedCopies
   where
-    updatedNumberOfCopies = updateNumberOfCopies copies $ scratchcardsWon card currentCardCount
-totalScratchcardCount _ _ t = t
+    updatedCopies = updateCopies copies $ scratchcardsWon card curCopies
 
 main :: IO ()
 main =
   do
-    contents <- readFile "inputs/day04/input.txt"
-    cards <- parseInput contents
+    cards <- map parseCardString . lines <$> readInput 4
     print $ sum $ map scratchcardPoints cards
-    print $ totalScratchcardCount cards (replicate (length cards) 1) 0
-    -- Future reference: if I ignore nice typing, I can also do this beauty XD
-    -- let cards = map (map (fromList . map (read :: String -> Int) . words) . splitOn " | " . last . splitOn ": ") $ lines contents
+    print $ totalScratchcardCount cards (replicate (length cards) 1)
