@@ -1,25 +1,31 @@
-import System.Environment (getArgs)
 import Data.List.Split (splitOn)
-import Data.List (intercalate)
+import Util (readInput)
 
-recordBeaterCount :: Int -> Int -> Int -> Int
-recordBeaterCount time recordDistance windUp = if distanceTravelled > recordDistance
+parseInputLine :: String -> [Int]
+parseInputLine = map read . words . last . splitOn ": "
+
+parseActualInputLine :: String -> Int
+parseActualInputLine = (read :: String -> Int) . filter (/=' ') . last . splitOn ": "
+
+recordBeaterCount :: Int -> Int -> Int
+recordBeaterCount time recordDistance = recordBeaterCountRec time recordDistance 0
+
+recordBeaterCountRec :: Int -> Int -> Int -> Int
+recordBeaterCountRec time recordDistance windUp = if distanceTravelled > recordDistance
   -- There are (t + 1) options in total, out of which first w and last w won't work
   then (time + 1) - 2 * windUp
-  else recordBeaterCount time recordDistance (windUp + 1)
+  else recordBeaterCountRec time recordDistance (windUp + 1)
   where
     distanceTravelled = (time - windUp) * windUp
 
 main :: IO ()
 main =
   do
-    args <- getArgs
-    contents <- readFile $ if not (null args) then head args  else "inputs/day06/input.txt"
-    let [timesStr, distancesStr] = lines contents
-    let times = (map (read :: String -> Int) . words . last . splitOn ": ") timesStr
-    let recordDistances = (map (read :: String -> Int) . words . last . splitOn ": ") distancesStr
-    print $ product $ [recordBeaterCount t d 0 | (t, d) <- zip times recordDistances]
-    let actualTime = (read :: String -> Int) $ intercalate "" $ (words . last . splitOn ": ") timesStr
-    let actualRecordDistance = (read :: String -> Int) $ intercalate "" $ (words . last . splitOn ": ") distancesStr
-    print $ recordBeaterCount actualTime actualRecordDistance 0
-
+    -- I don't like enforcing this having two lines with an error, I'll leave it as is
+    [timesStr, distancesStr] <- lines <$> readInput 6
+    let times = parseInputLine timesStr
+    let recordDistances = parseInputLine distancesStr
+    print $ product $ zipWith recordBeaterCount times recordDistances
+    let actualTime = parseActualInputLine timesStr
+    let actualRecordDistance = parseActualInputLine distancesStr
+    print $ recordBeaterCount actualTime actualRecordDistance
