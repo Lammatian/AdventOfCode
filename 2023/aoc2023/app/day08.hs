@@ -1,30 +1,30 @@
-import System.Environment (getArgs)
 import Data.List.Split (splitOn)
 import Data.Map as M (Map, fromList, lookup, keys)
 import Data.CircularList as C (CList, focus, rotR, fromList)
+import Util (readInput, bisectOn)
 
 data Direction = L | R deriving (Show, Read)
 type Location = String
-type Instruction = (Location, (Location, Location))
-type Instructions = Map Location (Location, Location)
+type Node = (Location, (Location, Location))
+type Graph = Map Location (Location, Location)
 
-parseInstruction :: String -> Instruction
-parseInstruction s = (f, (l, r))
+parseNode :: String -> Node
+parseNode s = (f, (l, r))
   where
-    [f, lr] = splitOn " = (" s
+    (f, lr) = bisectOn " = (" s
     l = head $ splitOn ", " lr
     r = init $ last $ splitOn ", " lr
 
-parseInstructions :: [String] -> Instructions
-parseInstructions = M.fromList . map parseInstruction
+parseGraph :: [String] -> Graph
+parseGraph = M.fromList . map parseNode
 
 turn :: (Location, Location) -> Direction -> Location
 turn (l, _) L = l
 turn (_, r) R = r
 
-nextLocation :: Instructions -> Location -> Direction -> Location
+nextLocation :: Graph -> Location -> Direction -> Location
 nextLocation is l d = case M.lookup l is of
-  Just x -> turn x d
+  Just x  -> turn x d
   Nothing -> error "Location not found in the map: " ++ l
 
 isStrictEnd :: Location -> Bool
@@ -34,13 +34,13 @@ isStrictEnd _ = False
 isRelaxedEnd :: Location -> Bool
 isRelaxedEnd = (== 'Z') . last
 
-followInstructions :: Instructions -> CList Direction -> Location -> (Location -> Bool) -> Int
-followInstructions is ds loc isEnd
+followDirections :: Graph -> CList Direction -> Location -> (Location -> Bool) -> Int
+followDirections is ds loc isEnd
   | isEnd loc = 0
-  | otherwise  = 1 + followInstructions is (rotR ds) nextLoc isEnd
+  | otherwise = 1 + followDirections is (rotR ds) nextLoc isEnd
   where
     d = case focus ds of
-      Just x -> x
+      Just x  -> x
       Nothing -> error "This should never happen :("
     nextLoc = nextLocation is loc d
 
@@ -50,11 +50,10 @@ nlcm = foldl lcm 1
 main :: IO ()
 main =
   do
-    args <- getArgs
-    contents <- readFile $ if not (null args) then head args else "inputs/day08/input.txt"
-    let directions = C.fromList $ (map (\x -> (read :: String -> Direction) [x]) . head . lines) contents
-    let instructions = parseInstructions $ drop 2 $ lines contents
-    print $ followInstructions instructions directions "AAA" isStrictEnd
-    let ghostStarts = filter ((== 'A') . last) $ keys instructions
-    let cycleLengths = map (\start -> followInstructions instructions directions start isRelaxedEnd) ghostStarts
+    contents <- lines <$> readInput 8
+    let directions = C.fromList $ (map (\x -> (read :: String -> Direction) [x]) . head) contents
+    let graph = parseGraph $ drop 2 contents
+    print $ followDirections graph directions "AAA" isStrictEnd
+    let ghostStarts = filter ((== 'A') . last) $ keys graph
+    let cycleLengths = map (\start -> followDirections graph directions start isRelaxedEnd) ghostStarts
     print $ nlcm $ map toInteger cycleLengths

@@ -1,9 +1,9 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use tuple-section" #-}
-import System.Environment (getArgs)
 import Data.Map (fromListWith, elems)
 import Data.List (sortOn, sort)
 import Data.Char (isDigit, digitToInt)
+import Util (readInput, bisect)
 
 type Cards = [Int]
 type Counts = [Int]
@@ -38,7 +38,7 @@ getCardCounts cs = sortOn (\x -> -x) $ elems $ fromListWith (+) $ map (\c -> (c,
 parseHand :: String -> Int -> Hand
 parseHand s jval = Hand cards cardCounts ((read :: String -> Int) betStr)
   where
-    [cardStr, betStr] = words s
+    (cardStr, betStr) = bisect s
     cards = parseCards cardStr jval
     cardCounts
       | jval == 11 = getCardCounts cards
@@ -57,8 +57,7 @@ getTotalWinnings hs = foldl (\acc (h, i) -> acc + i * unBet h) 0 (zip hs [1..])
 main :: IO()
 main =
   do
-    args <- getArgs
-    contents <- readFile $ if not (null args) then head args  else "inputs/day07/input.txt"
+    contents <- readInput 7
     let sortedHands = (sort . map (`parseHand` 11) . lines) contents
     print $ getTotalWinnings sortedHands
     let sortedJokerHands = (sort . map (`parseHand` 0) . lines) contents
