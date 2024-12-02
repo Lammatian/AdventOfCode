@@ -6,7 +6,7 @@ inp←⍎¨⊃⎕nget filename 1
 inc←{∧/2</⍵}
 dec←{∧/2>/⍵}
 sdif←{3≥⌈/|2-/⍵}
-safe←(((sdif∧dec)∨(sdif∧inc))⊢)
+safe←(sdif∧dec)∨(sdif∧inc)
 ⎕←+/safe¨inp
 
 ⍝ Part 2
@@ -14,4 +14,5 @@ safe←(((sdif∧dec)∨(sdif∧inc))⊢)
 id←{∘.=⍨⍳⍵}
 ⍝ Fast version
 ⍝ id←{⍵ ⍵⍴1,⍵⍴0}
-⎕←+/{∨/safe ⍵((/⍨)⍤1)~id≢⍵}¨inp
+dampsafe←{∨/safe ⍵((/⍨)⍤1)~id≢⍵}
+⎕←+/dampsafe¨inp
