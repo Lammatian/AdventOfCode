@@ -1,9 +1,10 @@
 ⍝ Get input and parse
-s←⊃⎕nget 'inputs/input.txt' 1
+filename←⊃2⌷⊢2⎕NQ#'GetCommandLineArgs'
+s←⊃⎕nget filename 1
 ⍝ Updates
-u←⍎¨¨{','(≠⊆⊢)⍵}¨({','∊⍵}¨s)/s
+u←⍎¨¨','(≠⊆⊢)¨(','∊¨s)/s
 ⍝ Rules
-r←{⍎¨'|'(≠⊆⊢)⍵}¨({'|'∊⍵}¨s)/s
+r←{⍎¨'|'(≠⊆⊢)⍵}¨('|'∊¨s)/s
 
 ⍝ Part 1
 ⍝ Upper triangular matrix without diagonal
