@@ -5,8 +5,19 @@
 #include <regex>
 #include <sstream>
 #include <numeric>
+#include <iostream>
 
 typedef long long ll;
+
+template<typename T>
+std::ostream& operator<<(std::ostream& o, std::vector<T> v) {
+    if (v.empty()) return o << "[]";
+    o << "[";
+    for (size_t i = 0; i < v.size() - 1; ++i) {
+        o << v[i] << ", "; 
+    }
+    return o << v.back() << "]";
+}
 
 namespace util {
     // TODO: Testing?
