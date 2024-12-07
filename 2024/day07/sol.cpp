@@ -6,6 +6,8 @@
 using namespace std;
 using ll = long long;
 
+enum class Op { ADD, MUL, CAT };
+
 struct eq {
     ll target;
     vector<ll> vals;
@@ -31,19 +33,30 @@ ll concat(ll a, ll b) {
     return a*res + b;
 }
 
-// op 0 is +, 1 is *, 2 is ||
-bool acw(const eq& e, ll res, size_t idx, int op, bool use_concat) {
-    if (op == 2 and !use_concat) return false;
-    if (idx == e.vals.size()) return res == e.target; 
-    ll newres;
-    if (op == 0) newres = res + e.vals[idx];
-    else if (op == 1) newres = res * e.vals[idx];
-    else if (op == 2) newres = concat(res, e.vals[idx]);
-    return acw(e, newres, idx + 1, 0, use_concat) || acw(e, newres, idx + 1, 1, use_concat) || acw(e, newres, idx + 1, 2, use_concat);
+ll eval(const eq& e, ll result, size_t idx, Op op) {
+    switch (op) {
+        case Op::ADD:
+            return result + e.vals[idx];
+        case Op::MUL:
+            return result * e.vals[idx];
+        case Op::CAT:
+            return concat(result, e.vals[idx]);
+    }
+}
+
+bool acw(const eq& e, ll result, size_t idx, Op op, bool use_concat) {
+    if (op == Op::CAT and !use_concat) return false;
+    if (idx == e.vals.size()) return e.target == result;
+    ll newres = eval(e, result, idx, op);
+    return acw(e, newres, idx + 1, Op::ADD, use_concat)
+        || acw(e, newres, idx + 1, Op::MUL, use_concat)
+        || acw(e, newres, idx + 1, Op::CAT, use_concat);
 }
 
 bool any_combination_works(const eq& e, bool use_concat) {
-    return acw(e, e.vals.front(), 1, 0, use_concat) || acw(e, e.vals.front(), 1, 1, use_concat) || acw(e, e.vals.front(), 1, 2, use_concat);
+    return acw(e, e.vals.front(), 1, Op::ADD, use_concat)
+        || acw(e, e.vals.front(), 1, Op::MUL, use_concat)
+        || acw(e, e.vals.front(), 1, Op::CAT, use_concat);
 }
 
 int main() {
