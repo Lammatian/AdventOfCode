@@ -10,13 +10,36 @@
 typedef long long ll;
 
 template<typename T>
-std::ostream& operator<<(std::ostream& o, std::vector<T> v) {
+std::ostream& operator<<(std::ostream& o, const std::vector<T>& v) {
     if (v.empty()) return o << "[]";
     o << "[";
     for (size_t i = 0; i < v.size() - 1; ++i) {
         o << v[i] << ", "; 
     }
     return o << v.back() << "]";
+}
+
+template<typename T>
+std::ostream& operator<<(std::ostream& o, const std::set<T>& s) {
+    if (s.empty()) return o << "{}";
+    o << "{";
+    auto it = s.begin();
+    o << *it;
+    it++;
+    for (; it != s.end(); ++it) {
+        o << ", " << *it;
+    }
+    return o << "}";
+}
+
+template<typename K, typename V>
+std::ostream& operator<<(std::ostream& o, const std::map<K, V>& m) {
+    if (m.empty()) return o << "{}";
+    o << "{";
+    for (const auto& [k, v]: m) {
+        o << "\n  " << k << ": " << v;
+    }
+    return o << "\n}";
 }
 
 namespace util {
