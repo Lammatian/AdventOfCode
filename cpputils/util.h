@@ -46,6 +46,48 @@ namespace util {
     // TODO: Testing?
 
     /**
+     * Structure to represent a position on a 2D grid
+     */
+    struct pos {
+        int r;
+        int c;
+
+        pos& operator+=(pos other) {
+            r += other.r;
+            c += other.c;
+            return *this; 
+        }
+
+        pos& operator-=(pos other) {
+            r -= other.r;
+            c -= other.c;
+            return *this; 
+        }
+
+        friend pos operator+(pos p1, pos p2) {
+            p1 += p2;
+            return p1;
+        }
+
+        friend pos operator-(pos p1, pos p2) {
+            p1 -= p2;
+            return p1;
+        }
+
+        friend bool operator<(pos p1, pos p2) {
+            return p1.r < p2.r || (p1.r == p2.r && p1.c < p2.c);
+        }
+
+        friend std::ostream& operator<<(std::ostream& o, pos p) {
+            return o << "(" << p.r << ", " << p.c << ")";
+        }
+
+        friend bool in_bounds(pos p, int maxr, int maxc) {
+            return p.r >= 0 && p.r < maxr && p.c >= 0 && p.c < maxc;
+        }
+    };
+
+    /**
      * Read lines from an std::ifstream and return as strings
      */
     std::vector<std::string> readlines(std::ifstream& f) {
