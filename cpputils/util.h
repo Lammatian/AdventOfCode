@@ -88,6 +88,65 @@ namespace util {
     };
 
     /**
+     * Structure to represent a 2D board
+     */
+    template<typename T>
+    struct board {
+        int maxr;
+        int maxc;
+        std::vector<std::vector<T>> b;
+
+        board() {}
+
+        board(int mr, int mc) : maxr(mr), maxc(mc) {
+            for (int r = 0; r < mr; ++r) {
+                b.push_back(std::vector<T>(mc));
+            }
+        }
+
+        bool in_bounds(pos p) const {
+            return p.r >= 0 && p.r < maxr && p.c >= 0 && p.c < maxc;
+        }
+
+        std::vector<pos> neighbours(pos p) const {
+            std::vector<pos> ds{{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
+            std::vector<pos> result;
+            for (auto& d: ds) {
+                if (in_bounds(p + d)) {
+                    result.push_back(p + d);
+                }
+            }
+            return result;
+        }
+
+        const std::vector<T>& operator[](size_t r) const {
+            return b[r];
+        }
+
+        std::vector<T>& operator[](size_t r) {
+            return b[r];
+        }
+
+        const T& operator[](pos p) const {
+            return b[p.r][p.c];
+        }
+
+        T& operator[](pos p) {
+            return b[p.r][p.c];
+        }
+
+        friend std::ostream& operator<<(std::ostream& o, const board<T>& b) {
+            for (size_t r = 0; r < b.maxr; ++r) {
+                for (size_t c = 0; c < b.maxc; ++c) {
+                    o << b[{(int)r, (int)c}];
+                }
+                if (r != b.maxr - 1) o << "\n";
+            }
+            return o;
+        }
+    };
+
+    /**
      * Read lines from an std::ifstream and return as strings
      */
     std::vector<std::string> readlines(std::ifstream& f) {
