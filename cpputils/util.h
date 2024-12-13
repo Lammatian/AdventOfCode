@@ -199,7 +199,7 @@ namespace util {
      * e.g tokenize("a:b;c,d", {':', ';', ','}) -> {"a", "b", "c", "d"}
      * If there are too many delimiters, stops at EOF
      **/
-    std::vector<std::string> tokenize(std::string s,
+    std::vector<std::string> tokenize(const std::string& s,
                                       std::vector<char> delims) {
         std::stringstream ss(s);
         std::string token;
@@ -226,7 +226,7 @@ namespace util {
      * occurrences of delim.
      * e.g. tokenize("a,b,c,d", ',') -> {"a", "b", "c", "d"}
      **/
-    std::vector<std::string> tokenize(std::string s, char delim) {
+    std::vector<std::string> tokenize(const std::string& s, char delim) {
         std::stringstream ss(s);
         std::string token;
         std::vector<std::string> result;
@@ -242,7 +242,7 @@ namespace util {
      * Split a string into parts that are delimited by the string `delim`.
      * e.g. split("a,,b,,c", ",,") -> {"a", "b", "c"}
      **/
-    std::vector<std::string> split(std::string s, std::string delim) {
+    std::vector<std::string> split(const std::string& s, std::string delim) {
         std::vector<std::string> result;
         size_t last = 0;
         size_t next = 0;
@@ -262,7 +262,7 @@ namespace util {
      * Split a string into parts that are delimited by `delims`.
      * e.g. split("a,,b..c", {",,", ".."}) -> {"a", "b", "c"}
      **/
-    std::vector<std::string> split(std::string s, std::vector<std::string> delims) {
+    std::vector<std::string> split(const std::string& s, std::vector<std::string> delims) {
         std::vector<std::string> result;
         size_t last = 0;
         size_t next = 0;
