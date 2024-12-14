@@ -19,6 +19,11 @@ std::ostream& operator<<(std::ostream& o, const std::vector<T>& v) {
     return o << v.back() << "]";
 }
 
+template<typename T1, typename T2>
+std::ostream& operator<<(std::ostream& o, const std::pair<T1, T2>& p) {
+    return o << "{" << p.first << ", " << p.second << "}";
+}
+
 template<typename T>
 std::ostream& operator<<(std::ostream& o, const std::set<T>& s) {
     if (s.empty()) return o << "{}";
