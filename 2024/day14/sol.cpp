@@ -41,6 +41,25 @@ struct robot {
     }
 };
 
+pair<float, float> mean(const vector<robot>& rs) {
+    float mx=0, my=0;
+    for (const auto& r: rs) {
+        mx += r.x;
+        my += r.y;
+    }
+    return {mx / rs.size(), my / rs.size()};
+}
+
+pair<float, float> variance(const vector<robot>& rs) {
+    float vx=0, vy=0;
+    auto [mx, my] = mean(rs);
+    for (const auto& r: rs) {
+        vx += (r.x - mx) * (r.x - mx);
+        vy += (r.y - my) * (r.y - my);
+    }
+    return {vx / rs.size(), vy / rs.size()};
+}
+
 void show_robots(const vector<robot>& rs, int X, int Y) {
     vector<string> board(Y, string(X, '.'));
     for (const auto& r: rs) {
@@ -73,14 +92,22 @@ int main(int argc, char** argv) {
         result *= quadrant_counts[i];
     }
     cout << result << "\n";
+    auto [start_vx, start_vy] = variance(robots);
+    float vx = start_vx;
+    float vy = start_vy;
 
-    // Part 2 was experimental
-    cout << 8168 << "\n";
-
-    // Printing christmas tree
-    // for (auto& r: robots) {
-    //     r.move(8068, X, Y);
-    // }
+    int steps = 100;
+    // This even 'works' on sample. Variance of 0.25 seems to run forever on sample
+    while (vx * vy > start_vx * start_vy * 0.35) {
+        steps++;
+        for (auto& r: robots) {
+            r.move(1, X, Y);
+        }
+        auto v = variance(robots);
+        vx = v.first;
+        vy = v.second;
+    }
+    cout << steps << "\n";
     // show_robots(robots, X, Y);
 
     // Experiments
