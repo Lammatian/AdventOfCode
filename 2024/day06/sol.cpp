@@ -5,47 +5,20 @@
 #include <algorithm>
 #include <cmath>
 
+#include "util.h"
+
 using namespace std;
+using namespace util;
 
-struct pos {
-    int r;
-    int c;
-};
-
-int operator<(pos a, pos b) {
-    return a.r < b.r or (a.r == b.r and a.c < b.c);
-}
-
-bool operator==(pos a, pos b) {
-    return a.r == b.r and a.c == b.c;
-}
-
-pos operator+(pos a, pos b) {
-    return {a.r + b.r, a.c + b.c};
-}
-
-ostream& operator<<(ostream& o, pos p) {
-    return o << "(" << p.r << ", " << p.c << ")";
-}
-
-template<typename T>
-ostream& operator<<(ostream& o, const vector<T>& v) {
-    o << "[";
-    for (const auto& x: v) {
-        o << x << " ";
-    }
-    return o << "]";
-}
-
-struct board {
+struct map_board {
     set<pos> obstacles;
     map<int, vector<int>> obs_by_row;
     map<int, vector<int>> obs_by_col;
-    int maxr;   
+    int maxr;
     int maxc;
 };
 
-bool in_bounds(pos p, const board& b) {
+bool in_bounds(pos p, const map_board& b) {
     return p.r >= 0 and p.c >= 0 and p.r < b.maxr and p.c < b.maxc;
 }
 
@@ -57,7 +30,7 @@ pos rotate(pos x) {
     else throw "unexpected direction to rotate";
 }
 
-pos next(board& b, pos curr, pos dir) {
+pos next(map_board& b, pos curr, pos dir) {
     if (dir.r == -1) {
         // find same column, smaller row
         if (b.obs_by_col[curr.c].empty() or b.obs_by_col[curr.c][0] >= curr.r) return {-1, curr.c};
@@ -109,8 +82,8 @@ int dist(pos a, pos b) {
     return std::abs(a.r - b.r) + std::abs(a.c - b.c);
 }
 
-// TODO: Not sure how to smartly use this for part 1
-bool walk2(board& b, pos curr, pos dir, set<pair<pos, pos>>& visited) {
+// Returns true if looped
+bool walk2(map_board& b, pos curr, pos dir, set<pair<pos, pos>>& visited) {
     visited.insert({curr, dir});
     pos newpos = next(b, curr, dir);
     if (visited.find({newpos, rotate(dir)}) != visited.end()) {
@@ -118,18 +91,16 @@ bool walk2(board& b, pos curr, pos dir, set<pair<pos, pos>>& visited) {
     }
     if (!in_bounds(newpos, b)) {
         return false;
-        //return dist(curr, newpos) - 1;
     } else {
         return walk2(b, newpos, rotate(dir), visited);
-        //return dist(curr, newpos) + walk2(b, newpos, rotate(dir), visited);
     }
 }
 
 // Returns true if looped
-bool walk(const board& b, pos curr, pos dir, set<pair<pos, pos>>& visited) {
+bool walk(const map_board& b, pos curr, pos dir, set<pair<pos, pos>>& visited) {
     visited.insert({curr, dir});
 
-    pos newpos = curr + dir; 
+    pos newpos = curr + dir;
     if (visited.find({newpos, dir}) != visited.end()) {
         return true;
     } else if (b.obstacles.find(newpos) != b.obstacles.end()) {
@@ -143,7 +114,7 @@ bool walk(const board& b, pos curr, pos dir, set<pair<pos, pos>>& visited) {
 
 int main() {
     string line;
-    board b; 
+    map_board b;
     int r = 0;
     pos start;
     while (cin >> line) {
@@ -166,7 +137,7 @@ int main() {
     }
 
     b.maxr = r;
-    b.maxc = line.size(); 
+    b.maxc = line.size();
 
     set<pair<pos, pos>> visited;
     walk(b, start, {-1, 0}, visited);
@@ -175,7 +146,7 @@ int main() {
         visited_locs.insert(p);
     }
     cout << visited_locs.size() << "\n";
-    
+
     // Part 2
     // Idea #1: Check ALL the positions for a new obstacle - very slow but got me a star [79.1s]
     // int result = 0;
@@ -215,6 +186,7 @@ int main() {
         sort(obc.begin(), obc.end());
         auto visited2 = set<pair<pos, pos>>();
         if (walk2(b, start, {-1, 0}, visited2)) {
+            //cout << p << "\n";
             result++;
         }
         for (auto it = obr.begin(); it != obr.end(); ++it) {
