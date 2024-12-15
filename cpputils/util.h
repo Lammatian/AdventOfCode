@@ -79,6 +79,10 @@ namespace util {
             return p1;
         }
 
+        friend bool operator==(pos p1, pos p2) {
+            return p1.r == p2.r && p1.c == p2.c;
+        }
+
         friend bool operator<(pos p1, pos p2) {
             return p1.r < p2.r || (p1.r == p2.r && p1.c < p2.c);
         }
