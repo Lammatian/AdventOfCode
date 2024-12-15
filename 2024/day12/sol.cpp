@@ -135,7 +135,7 @@ int main() {
     string line;
     int r = 0;
     while (cin >> line) {
-        b.b.push_back(vector<char>(line.begin(), line.end()));
+        b.push_back(vector<char>(line.begin(), line.end()));
         r++;
     }
     b.maxr = r;
@@ -146,12 +146,12 @@ int main() {
     // Idea: Add a border and then look at all 2x2 squares and count corners
     // Number of corners == number of sides
     vector<char> border_row(b.maxc + 2, '.');
-    b.b.insert(b.b.begin(), border_row);
+    b.insert(b.begin(), border_row);
     for (size_t r = 1; r <= b.maxr; ++r) {
-        b.b[r].push_back('.');
-        b.b[r].insert(b.b[r].begin(), '.');
+        b[r].push_back('.');
+        b[r].insert(b[r].begin(), '.');
     }
-    b.b.push_back(border_row);
+    b.push_back(border_row);
     b.maxr += 2;
     b.maxc += 2;
     board<int> regions(b.maxr, b.maxc);

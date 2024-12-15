@@ -96,16 +96,15 @@ namespace util {
      * Structure to represent a 2D board
      */
     template<typename T>
-    struct board {
+    struct board : public std::vector<std::vector<T>> {
         int maxr;
         int maxc;
-        std::vector<std::vector<T>> b;
 
         board() {}
 
         board(int mr, int mc) : maxr(mr), maxc(mc) {
             for (int r = 0; r < mr; ++r) {
-                b.push_back(std::vector<T>(mc));
+                this->push_back(std::vector<T>(mc));
             }
         }
 
@@ -124,26 +123,20 @@ namespace util {
             return result;
         }
 
-        const std::vector<T>& operator[](size_t r) const {
-            return b[r];
-        }
-
-        std::vector<T>& operator[](size_t r) {
-            return b[r];
-        }
+        using std::vector<std::vector<T>>::operator[];
 
         const T& operator[](pos p) const {
-            return b[p.r][p.c];
+            return (*this)[p.r][p.c];
         }
 
         T& operator[](pos p) {
-            return b[p.r][p.c];
+            return (*this)[p.r][p.c];
         }
 
         friend std::ostream& operator<<(std::ostream& o, const board<T>& b) {
             for (size_t r = 0; r < b.maxr; ++r) {
                 for (size_t c = 0; c < b.maxc; ++c) {
-                    o << b[{(int)r, (int)c}];
+                    o << b[r][c];
                 }
                 if (r != b.maxr - 1) o << "\n";
             }
