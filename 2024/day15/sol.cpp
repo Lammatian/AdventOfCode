@@ -1,71 +1,117 @@
 #include <iostream>
 #include <map>
+#include <set>
 #include <ranges>
 #include <numeric>
+#include <queue>
+#include <unistd.h>
 
 #include "util.h"
 
 using namespace std;
 using namespace util;
 
-void show_board(map<pos, char>& board, pos robot, int R, int C) {
-    vector<string> outboard(R, string(C, '.'));
-    for (auto& [k, v]: board) {
-        outboard[k.r][k.c] = v;
-    }
-    outboard[robot.r][robot.c] = '@';
-
-    for (auto& r: outboard) {
-        cout << r << "\n";
-    }
-    cout << "\n";
-}
-
-bool point_in_bounds(pos p, int R, int C) {
-    return p.r >= 0 && p.r < R && p.c >= 0 && p.c < C;
-}
-
-bool move(map<pos, char>& board, pos move, pos& start, int R, int C) {
-    vector<pos> stuff_to_move{start};
-    pos curr = start + move;
-    while (point_in_bounds(curr, R, C) && board.find(curr) != board.end() && board[curr] != '#') {
-        stuff_to_move.push_back(curr);
-        curr += move;
+bool move(board<char>& b, pos d, pos& start) {
+    vector<pos> pos_to_move = {start};
+    pos curr = start + d;
+    while (b.in_bounds(curr) && b[curr] != '#' && b[curr] != '.') {
+        pos_to_move.push_back(curr);
+        curr += d;
     }
 
-    if (!point_in_bounds(curr, R, C) || board[curr] == '#') {
-        return false;
+    if (!b.in_bounds(curr) || b[curr] == '#') return false;
+
+    for (auto p: pos_to_move | views::reverse) {
+        b[p + d] = b[p];
+        b[p] = '.';
     }
 
-    for (auto p: stuff_to_move | views::reverse) {
-        board[p + move] = board[p];
-        board.erase(p); 
-    }
-    start += move;
-
+    start += d;
     return true;
 }
 
-void simulate(map<pos, char>& board, const vector<pos>& moves, pos start, int R, int C) {
+void simulate(board<char>& b, const vector<pos>& moves, pos start) {
     for (auto m: moves) {
-        move(board, m, start, R, C);
-    } 
+        move(b, m, start);
+    }
+}
+
+bool move2(board<char>& b, pos d, pos& start) {
+    vector<pos> pos_to_move;
+    queue<pos> q;
+    q.push(start);
+    set<pos> visited;
+    while (!q.empty()) {
+        pos curr = q.front();
+        q.pop();
+        if (visited.find(curr) != visited.end()) continue;
+        pos_to_move.push_back(curr);
+        visited.insert(curr);
+        pos next = curr + d;
+        if (b[next] == '#') return false;
+        if (b[next] == '[') {
+            q.push(next);
+            if (d.r != 0) q.push(next + pos{0, 1});
+        }
+        if (b[next] == ']') {
+            q.push(next);
+            if (d.r != 0) q.push(next + pos{0, -1});
+        }
+    }
+
+    for (auto p: pos_to_move | views::reverse) {
+        b[p + d] = b[p];
+        b[p] = '.';
+    }
+
+    start += d;
+    return true;
+}
+
+void simulate2(board<char>& b, const vector<pos>& moves, pos start) {
+    for (auto m: moves) {
+        move2(b, m, start);
+    }
 }
 
 int main() {
     string line;
+    board<char> b;
+    board<char> b2;
     bool reading_board = true;
-    map<pos, char> board;
     vector<pos> moves;
     int r = 0;
     int R, C;
-    pos robot;
+    pos start;
+    pos start2;
     while (getline(cin, line)) {
         if (line == "") reading_board = false;
         if (reading_board) {
+            b.push_back(vector<char>(line.begin(), line.end()));
+            b2.push_back(vector<char>());
             for (int c = 0; c < line.size(); ++c) {
-                if (line[c] == '@') robot = {r, c};
-                if (line[c] != '.') board[{r, c}] = line[c]; 
+                if (line[c] == '@') {
+                    start = {r, c};
+                    start2 = {r, 2*c};
+                }
+                switch (line[c]) {
+                    case '#':
+                        b2[r].push_back('#');
+                        b2[r].push_back('#');
+                        break;
+                    case 'O':
+                        b2[r].push_back('[');
+                        b2[r].push_back(']');
+                        break;
+                    case '.':
+                        b2[r].push_back('.');
+                        b2[r].push_back('.');
+                        break;
+                    case '@':
+                        b2[r].push_back('@');
+                        b2[r].push_back('.');
+                        break;
+                }
             }
             r++;
             C = line.size();
@@ -90,11 +136,27 @@ int main() {
     }
     R = r;
 
-    simulate(board, moves, robot, R, C);
-    cout << accumulate(board.begin(), board.end(), 0LL, [](ll acc, auto& b) {
-            if (b.second == 'O') return acc + 100LL * b.first.r + b.first.c;
-            return acc;
-            }) << "\n";
+    b.maxr = R;
+    b.maxc = C;
+    simulate(b, moves, start);
+    ll result = 0;
+    for (int r = 0; r < b.maxr; ++r) {
+        for (int c = 0; c < b.maxc; ++c) {
+            if (b[r][c] == 'O') result += 100*r + c;
+        }
+    }
+    cout << result << "\n";
+
+    b2.maxr = R;
+    b2.maxc = 2 * C;
+    simulate2(b2, moves, start2);
+    ll result2 = 0;
+    for (int r = 0; r < b2.maxr; ++r) {
+        for (int c = 0; c < b2.maxc; ++c) {
+            if (b2[r][c] == '[') result2 += 100*r + c;
+        }
+    }
+    cout << result2 << "\n";
 
     return 0;
 }
