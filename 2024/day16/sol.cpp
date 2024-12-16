@@ -9,43 +9,39 @@
 using namespace std;
 using namespace util;
 
+using loc = pair<pos, pos>;
+
 struct PathCost {
-    ll priority;
-    pair<pos, pos> loc;
+    ll prio;
+    loc l;
 
     friend bool operator<(const PathCost& pc1, const PathCost& pc2) {
-        return pc1.priority > pc2.priority;
+        return pc1.prio > pc2.prio;
     }
 
     friend ostream& operator<<(ostream& o, const PathCost& pc) {
-        return o << pc.priority << " | " << pc.loc.first << ", " << pc.loc.second;
+        return o << pc.prio << " | " << pc.l.first << ", " << pc.l.second;
     }
 };
 
-struct ExtendedPathCost : public PathCost {
-    set<pos> path;
-};
-
-ll best_path(board<char>& b, pos start) {
+ll best_path(board<char>& b, pos start, pos end) {
     priority_queue<PathCost> q;
-    q.push({0, {start, {0, 1}}});
-    set<pair<pos, pos>> visited;
-    visited.insert({start, {0, 1}});
+    q.push({0, {start, Dir::E}});
+    set<loc> visited;
+    visited.insert({start, Dir::E});
     while (!q.empty()) {
-        auto [prio, cd] = q.top();
-        pos curr = cd.first;
-        pos dir = cd.second;
+        auto [prio, l] = q.top();
+        auto [curr, dir] = l;
         q.pop();
-        if (b[curr] == 'E') return prio;
+        if (curr == end) return prio;
 
         for (auto n: b.neighbours(curr)) {
-            if (visited.find({n, n - curr}) != visited.end()) {
-                continue;
-            }
+            if (visited.find({n, n - curr}) != visited.end()) continue;
             if (b[n] != '#') {
-                if (n - curr == dir) q.push({prio + 1, {n, dir}});
-                else q.push({prio + 1001, {n, n - curr}});
-                visited.insert({n, n - curr});
+                pos new_dir = n - curr;
+                if (new_dir == dir) q.push({prio + 1, {n, new_dir}});
+                else q.push({prio + 1001, {n, new_dir}});
+                visited.insert({n, new_dir});
             }
         }
     }
@@ -53,47 +49,49 @@ ll best_path(board<char>& b, pos start) {
     return -1;
 }
 
-set<pos> best_spots(board<char>& b, pos start, ll lowest_score) {
+set<pos> best_spots(board<char>& b, pos start, pos end, ll lowest_score) {
     set<pos> result;
-    priority_queue<ExtendedPathCost> q;
-    q.push({0, {start, {0, 1}}, {start}});
-    map<pair<pos, pos>, pair<ll, set<pos>>> visited;
-    visited[{start, {0, 1}}] = {0, {start}};
-    pos end;
+    priority_queue<PathCost> q;
+    q.push({0, {start, Dir::E}});
+    map<loc, pair<ll, set<loc>>> visited;
+    visited[{start, Dir::E}] = {0, {}};
     while (!q.empty()) {
-        auto epc = q.top();
-        ll prio = epc.priority;
-        pos curr = epc.loc.first;
-        pos dir = epc.loc.second;
-        set<pos> path = epc.path;
+        auto [prio, l] = q.top();
+        auto [curr, dir] = l;
         q.pop();
-        if (b[curr] == 'E') {
-            end = curr;
-            continue;
-        }
+        if (curr == end) continue;
 
         for (auto n: b.neighbours(curr)) {
-            ll cost = (n - curr == dir) ? prio + 1 : prio + 1001;
             if (b[n] == '#') continue;
+            ll cost = (n - curr == dir) ? prio + 1 : prio + 1001;
+            if (cost > lowest_score) continue;
             if (visited.find({n, n - curr}) != visited.end()) {
+                // If we are here, cost cannot be lower by dijkstra's design
                 if (visited[{n, n - curr}].first == cost) {
-                    visited[{n, n - curr}].second.insert(path.begin(), path.end());
+                    // Add additional predecessor in the path with the same cost
+                    visited[{n, n - curr}].second.insert({curr, dir});
                 }
                 continue;
             }
             if (b[n] != '#') {
-                set<pos> new_path(visited[{curr, dir}].second.begin(), visited[{curr, dir}].second.end());
-                new_path.insert(n);
-                if (n - curr == dir) q.push({prio + 1, {n, dir}, new_path});
-                else q.push({prio + 1001, {n, n - curr}, new_path});
-                visited[{n, n - curr}] = {cost, new_path};
+                if (n - curr == dir) q.push({prio + 1, {n, dir}});
+                else q.push({prio + 1001, {n, n - curr}});
+                visited[{n, n - curr}] = {cost, {{curr, dir}}};
             }
         }
     }
 
-    for (pos d: vector<pos>{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}) {
+    for (pos d: cardinals) {
         if (visited.find({end, d}) != visited.end() && visited[{end, d}].first == lowest_score) {
-            result.insert(visited[{end, d}].second.begin(), visited[{end, d}].second.end());
+            // Recreate the path from the back
+            queue<loc> qq;
+            qq.push({end, d});
+            while (!qq.empty()) {
+                auto [pp, dd] = qq.front();
+                qq.pop();
+                result.insert(pp);
+                for (auto& l: visited[{pp, dd}].second) qq.push(l);
+            }
         }
     }
     return result;
@@ -109,16 +107,13 @@ int main() {
     }
     b.maxr = r;
     b.maxc = line.size();
+    pos start = {b.maxr - 2, 1};
+    pos end = {1, b.maxc - 2};
 
-    auto lowest_score = best_path(b, {b.maxr - 2, 1});
+    auto lowest_score = best_path(b, start, end);
     cout << lowest_score << "\n";
-    auto spots = best_spots(b, {b.maxr - 2, 1}, lowest_score);
+    auto spots = best_spots(b, start, end, lowest_score);
     cout << spots.size() << "\n";
-
-    //for (auto s: spots) {
-    //    b[s] = 'O';
-    //}
-    //cout << b << "\n";
 
     return 0;
 }
