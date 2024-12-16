@@ -9,12 +9,25 @@
 
 typedef long long ll;
 
+// Declarations to avoid order issues when printing nested structures
+template<typename T>
+std::ostream& operator<<(std::ostream& o, const std::vector<T>& v);
+
+template<typename T1, typename T2>
+std::ostream& operator<<(std::ostream& o, const std::pair<T1, T2>& p);
+
+template<typename T>
+std::ostream& operator<<(std::ostream& o, const std::set<T>& s);
+
+template<typename K, typename V>
+std::ostream& operator<<(std::ostream& o, const std::map<K, V>& m);
+
 template<typename T>
 std::ostream& operator<<(std::ostream& o, const std::vector<T>& v) {
     if (v.empty()) return o << "[]";
     o << "[";
     for (size_t i = 0; i < v.size() - 1; ++i) {
-        o << v[i] << ", "; 
+        o << v[i] << ", ";
     }
     return o << v.back() << "]";
 }
@@ -60,13 +73,13 @@ namespace util {
         pos& operator+=(pos other) {
             r += other.r;
             c += other.c;
-            return *this; 
+            return *this;
         }
 
         pos& operator-=(pos other) {
             r -= other.r;
             c -= other.c;
-            return *this; 
+            return *this;
         }
 
         friend pos operator+(pos p1, pos p2) {
@@ -96,6 +109,15 @@ namespace util {
         }
     };
 
+    struct Dir {
+        static constexpr pos N = {-1, 0};
+        static constexpr pos E = {0, 1};
+        static constexpr pos S = {1, 0};
+        static constexpr pos W = {0, -1};
+    };
+
+    std::vector<pos> cardinals = {Dir::N, Dir::E, Dir::S, Dir::W};
+
     /**
      * Structure to represent a 2D board
      */
@@ -117,9 +139,8 @@ namespace util {
         }
 
         std::vector<pos> neighbours(pos p) const {
-            std::vector<pos> ds{{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
             std::vector<pos> result;
-            for (auto& d: ds) {
+            for (auto& d: cardinals) {
                 if (in_bounds(p + d)) {
                     result.push_back(p + d);
                 }
@@ -281,7 +302,7 @@ namespace util {
         return result;
     }
 
-    
+
     /**
      * In-place intersection as there is none in STL lol
      **/
@@ -330,7 +351,7 @@ namespace util {
         return result;
     }
 
-    /** 
+    /**
      * Join a string using a delimiter
      * e.g. join({"a", "b", "c"}, ",") -> "a,b,c"
      */
@@ -352,6 +373,6 @@ namespace util {
             result.push_back(match);
             searchStart = match.suffix().first;
         }
-        return result; 
+        return result;
     }
 }
