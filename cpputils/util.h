@@ -184,11 +184,12 @@ namespace util {
     }
 
     /**
-     * Read long long numbers from an std::ifstream
+     * Read long long numbers from an std::istream
      */
-    std::vector<ll> readlls(std::ifstream& f) {
-        ll num;
-        std::vector<ll> result;
+    template<typename T>
+    std::vector<T> readlls(std::istream& f) {
+        T num;
+        std::vector<T> result;
 
         while (f >> num) {
             result.push_back(num);
