@@ -134,6 +134,12 @@ namespace util {
             }
         }
 
+        board(int mr, int mc, T def) : maxr(mr), maxc(mc) {
+            for (int r = 0; r < mr; ++r) {
+                this->push_back(std::vector<T>(mc, def));
+            }
+        }
+
         bool in_bounds(pos p) const {
             return p.r >= 0 && p.r < maxr && p.c >= 0 && p.c < maxc;
         }
