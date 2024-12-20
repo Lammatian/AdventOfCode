@@ -39,27 +39,6 @@ pair<ll, vector<pos>> fastest_path(const board<char>& b, pos start, pos end) {
     return {-1, {}};
 }
 
-board<ll> distances_to_end(const board<char>& b, pos start, pos end) {
-    board<ll> ds(b.maxr, b.maxc, -1);
-    queue<pair<pos, ll>> q;
-    q.push({end, 0});
-    ds[end] = 0;
-    set<pos> visited;
-    visited.insert(end);
-    while (!q.empty()) {
-        auto [curr, d] = q.front();
-        q.pop();
-        for (auto n: b.neighbours(curr)) {
-            if (b[n] == '#') continue;
-            if (visited.find(n) != visited.end()) continue;
-            q.push({n, d + 1});
-            ds[n] = d + 1;
-            visited.insert(n);
-        }
-    }
-    return ds;
-}
-
 ll dist(pos p1, pos p2) {
     return abs(p1.r - p2.r) + abs(p1.c - p2.c);
 }
@@ -82,12 +61,13 @@ int main(int argc, char** argv) {
     ll result1 = 0;
     ll result2 = 0;
     auto [time, path] = fastest_path(b, start, end);
-    board<ll> d = distances_to_end(b, start, end);
-    for (auto p1: path) {
-        for (auto p2: path) {
-            ll ds = dist(p1, p2);
-            if (ds <= 2 && d[p2] - d[p1] - ds >= min_savings) result1++;
-            if (ds <= 20 && d[p2] - d[p1] - ds >= min_savings) result2++;
+    // I only need to check points on the path since the input is 'special'
+    // and all empty spots are part of the path
+    for (int i = 0; i < path.size(); ++i) {
+        for (int j = i + 1; j < path.size(); ++j) {
+            ll ds = dist(path[j], path[i]);
+            if (ds <= 2 && j - i - ds >= min_savings) result1++;
+            if (ds <= 20 && j - i - ds >= min_savings) result2++;
         }
     }
     cout << result1 << "\n";
