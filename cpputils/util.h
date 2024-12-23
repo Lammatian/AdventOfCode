@@ -6,6 +6,7 @@
 #include <sstream>
 #include <numeric>
 #include <iostream>
+#include <print>
 
 typedef long long ll;
 
@@ -32,9 +33,24 @@ std::ostream& operator<<(std::ostream& o, const std::vector<T>& v) {
     return o << v.back() << "]";
 }
 
+template<typename T>
+struct std::formatter<std::vector<T>> : std::formatter<T> {
+    template<typename FormatContext>
+    auto format(const std::vector<T>& v, FormatContext& ctx) const {
+        std::format_to(ctx.out(), "[");
+        bool first = true;
+        for (auto&& x: v) {
+            if (!first) std::format_to(ctx.out(), ", ");
+            std::formatter<T>::format(x, ctx);
+            first = false;
+        }
+        return std::format_to(ctx.out(), "]");
+    }
+};
+
 template<typename T1, typename T2>
 std::ostream& operator<<(std::ostream& o, const std::pair<T1, T2>& p) {
-    return o << "{" << p.first << ", " << p.second << "}";
+    return o << "(" << p.first << ", " << p.second << ")";
 }
 
 template<typename T>
@@ -381,5 +397,39 @@ namespace util {
             searchStart = match.suffix().first;
         }
         return result;
+    }
+
+    /**
+     * Given a set, return all the combinations without repetitions of size N for t
+     */
+    template<typename T>
+    std::set<std::set<T>> combinations_without_rep(size_t N, std::set<T> picked, std::set<T> remaining) {
+        if (picked.size() == N) {
+            return {picked};
+        }
+        if (remaining.size() == 0) return {};
+        auto s = *remaining.begin(); remaining.erase(remaining.begin());
+        auto c1 = combinations_without_rep(N, picked, remaining);
+        picked.insert(s);
+        auto c2 = combinations_without_rep(N, picked, remaining);
+        c1.insert(c2.begin(), c2.end());
+        return c1;
+    }
+
+    /**
+     * Given a vector, return all the combinations without repetitions of size N for t
+     */
+    template<typename T>
+    std::set<std::vector<T>> combinations_without_rep(size_t N, std::vector<T> picked, std::vector<T> remaining) {
+        if (picked.size() == N) {
+            return {picked};
+        }
+        if (remaining.size() == 0) return {};
+        auto s = remaining.back(); remaining.pop_back();
+        auto c1 = combinations_without_rep(N, picked, remaining);
+        picked.push_back(s);
+        auto c2 = combinations_without_rep(N, picked, remaining);
+        c1.insert(c2.begin(), c2.end());
+        return c1;
     }
 }
